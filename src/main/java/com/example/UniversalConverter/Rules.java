@@ -22,8 +22,8 @@ public class Rules {
         return KnownUnits.containsKey(unit);
     }
 
-    public int getConversionFactorToTheSmallestUnit(Unit unit){
-        return 0;
+    MeasureGraph getGraph(Unit unit){
+        return KnownUnits.get(unit);
     }
 
 }

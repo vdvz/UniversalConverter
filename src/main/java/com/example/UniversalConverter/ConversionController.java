@@ -1,17 +1,18 @@
 package com.example.UniversalConverter;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.http.HttpResponse;
 
 @RestController
 public class ConversionController {
 
     @PostMapping("/convert")
-    int getConversionRate(@RequestBody ConversionRequest request){
+    @ResponseBody
+    String getConversionRate(@RequestBody ConversionRequest request){
         System.out.println(request.getFrom());
         System.out.println(request.getTo());
-        return 0;
+        return "Ok";
     }
 
 
