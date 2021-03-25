@@ -8,11 +8,13 @@ public class PreProcessingPhase {
         }
     }
 
-    Expression combine(Expression firstExpression, Expression secondExpression){
+    Expression combine(Expression firstExpression, Expression secondExpression) throws IncorrectDimensionException {
         return secondExpression.multiply(firstExpression.invert());
     }
 
-    void firstStep(Expression leftHand, Expression rightHand){
+    public Expression step(Expression leftHand, Expression rightHand) throws IncorrectDimensionException {
+        checkDimension(leftHand, rightHand);
+        return combine(leftHand, rightHand);
     }
 
 }

@@ -20,11 +20,17 @@ public class RulesCreator {
                 Unit firstUnit = new Unit(lines[0]);
                 Unit secondUnit =  new Unit(lines[1]);
                 BigDecimal rate = new BigDecimal(lines[2]);
-                MeasureGraph graph = null;
+                MeasureGraph graph;
                 if ((graph = knownUnits.get(firstUnit)) != null) {
                     if (knownUnits.containsKey(secondUnit)) {
-                        continue;
-                        // TODO throw exception
+                        MeasureGraph attachableGraph = knownUnits.get(secondUnit);
+                        graph.bindGraph(firstUnit, secondUnit, rate, attachableGraph);
+                        MeasureGraph finalGraph = graph;
+                        knownUnits.forEach((unit, measureGraph) -> {
+                            if(measureGraph.equals(attachableGraph)){
+                                knownUnits.replace(unit, finalGraph);
+                            }
+                        });
                     } else {
                         graph.bindUnit(firstUnit, secondUnit, rate);
                         knownUnits.put(secondUnit, graph);

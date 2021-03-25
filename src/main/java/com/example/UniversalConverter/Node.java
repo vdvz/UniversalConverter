@@ -6,16 +6,12 @@ import java.util.Map;
 
 public class Node {
 
-    private final Unit unit;
+    private final String unitName;
 
     Map<Node, BigDecimal> neighbours = new HashMap<>();
 
-    public Node(Unit unit) {
-        this.unit = unit;
-    }
-
-    public Unit getUnit() {
-        return unit;
+    public Node(String unitName) {
+        this.unitName = unitName;
     }
 
     public void addEdge(Node node, BigDecimal rate) {
@@ -26,4 +22,7 @@ public class Node {
         return neighbours;
     }
 
+    public String getUnitName() {
+        return unitName;
+    }
 }

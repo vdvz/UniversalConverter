@@ -10,12 +10,12 @@ public class Unit implements Unit_I{
 
     // "" - безразмерная величина
     //Степень безразмерной величины всегда единица => ""^1 * ""^(-1) = 1
-    Unit(String _name){
+    public Unit(String _name){
         Name = _name;
         power = 1;
     }
 
-    Unit(String _name, Integer _power) {
+    public Unit(String _name, Integer _power) {
         Name = _name;
         power = _power;
     }

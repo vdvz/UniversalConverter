@@ -26,11 +26,9 @@ public class ProcessingPhase {
 
     void convert(Expression e){
         BigDecimal K = e.getK();
-
         for (MeasureGroup gr: e.getMeasures()) {
             K = K.multiply(convertGroup(gr));
         }
-
         e.setK(K);
     }
 
@@ -38,39 +36,40 @@ public class ProcessingPhase {
         BigDecimal resultK = BigDecimal.ONE;
         MeasureGraph graph = group.getGraph();
 
-        while(group.size() > 1){
-            Unit currentUnit = group.poll();
+        while(!group.isEmpty()){
             Queue<MultiplicationUnit> queue = new LinkedList<>();
-            graph.getNeighbors(currentUnit).forEach((node, bigDecimal) -> {
-                queue.add(new MultiplicationUnit(node, bigDecimal));
+            Unit from = group.getNext();
+            graph.getNeighbors(from).forEach((node, bigDecimal) -> {
+                    queue.add(new MultiplicationUnit(node, bigDecimal));
             });
 
             while(!queue.isEmpty()) {
                 MultiplicationUnit mlUnit = queue.remove();
-                Node el = mlUnit.getNode();
+                Node currentNode = mlUnit.getNode();
 
                 //check if node exists in the group, if not push all neighbors except the neighbor from which we came
+                //or if node is a rootNode which means non-dimension node(each graph has non-dimension node and it is always a root)
                 //otherwise resultK*=multiplyUnit and exit from cycle
-                if (group.contains(el.getUnit())) {
-                    int power = mlUnit.getNode().getUnit().getPower();
+                Unit to = group.getUnitByName(currentNode.getUnitName());
+                if (group.isValidConversion(from, to) || graph.isRootNode(currentNode)) {
+                    int power = to.getPower();
+                    BigDecimal currentK = mlUnit.getK();
                     if(power < 0){
-                        BigDecimal k = mlUnit.getK();
-                        int kScale = resultK.scale();
-                        if( kScale >= maxScale){
-                            resultK = resultK.divide(k, roundPolitic);
+                        //a^(-i) <=> 1/(a^i)
+                        int kScale = Math.max(currentK.scale(), resultK.scale());
+                        if( kScale >= maxScale && kScale!=0){//if not 1/6 == 0, and the scale is 0, but we expect 0.6..67
+                            resultK = resultK.divide(currentK.pow(Math.abs(power)), roundPolitic);
                         } else {
-                            resultK = resultK.divide(k, kScale + deltaScale, roundPolitic);
+                            resultK = resultK.divide(currentK.pow(Math.abs(power)), kScale + deltaScale, roundPolitic);
                         }
                     }else{
-                        resultK = resultK.multiply(mlUnit.getK());
+                        resultK = resultK.multiply(currentK.pow(power));
                     }
                     break;
                 } else {
                     //make step
-                    graph.getNeighbors(mlUnit.getNode().getUnit()).forEach((node, bigDecimal) -> {
-                        if(!node.equals(mlUnit.getNode())) {
-                            queue.add(new MultiplicationUnit(node, mlUnit.getK().multiply(bigDecimal)));
-                        }
+                    currentNode.getNeighbors().forEach((node, transitionK) -> {
+                        queue.add(new MultiplicationUnit(node, mlUnit.getK().multiply(transitionK)));
                     });
                 }
             }

@@ -17,16 +17,41 @@ public class MeasureGroup{
     }
 
     public void addUnit(Unit unit, int power){
-        if(units.contains(unit)){
-            Unit exst_unit = units.get(units.indexOf(unit));
-            exst_unit.setPower(exst_unit.getPower() + power);
+        int index = units.indexOf(unit);
+        if(index != -1){
+            Unit existing_unit = units.get(index);
+            if((existing_unit.getPower() + power)!= 0 ){
+                existing_unit.setPower(existing_unit.getPower() + power);
+            } else {
+                units.remove(index);
+            }
         } else {
+            unit.setPower(power);
             units.add(unit);
         }
     }
 
-    Unit poll(){
-        return units.poll();
+    public Unit getUnitByName(String unitName){//may throw nosuchelementexception
+        return units.stream().filter(e->e.getName().equals(unitName)).findFirst().get();
+    }
+
+    public MeasureGroup multiply(MeasureGroup measureGroup) throws IncorrectDimensionException {
+        if(this.equals(measureGroup)){
+            units.forEach(e -> measureGroup.addUnit(e, e.getPower()));
+            return measureGroup;
+        } else throw new IncorrectDimensionException();
+    }
+
+    public void invert(){
+        units.forEach(e -> e.setPower(e.getPower()*(-1)));
+    }
+
+    Unit getNext(){
+        return units.remove();
+    }
+
+    boolean isValidConversion(Unit from, Unit to){
+        return false;
     }
 
     @Override
@@ -46,7 +71,7 @@ public class MeasureGroup{
         return units.contains(unit);
     }
 
-    public int size(){
-        return units.size();
+    public boolean isEmpty() {
+        return units.isEmpty();
     }
 }

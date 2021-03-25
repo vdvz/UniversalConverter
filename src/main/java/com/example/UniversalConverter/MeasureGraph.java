@@ -8,34 +8,35 @@ public class MeasureGraph {
     private final Set<Node> nodes;
     private final Node rootNode;
 
-
     private MeasureGraph(){
         rootNode = null;
         nodes = null;
     }
 
-    public MeasureGraph(Unit rootUnit) {
+    public MeasureGraph(Node rootNode) {
         nodes = new HashSet<>();
-        Unit dimensionlessUnit = new Unit("");
-        rootNode = new Node(dimensionlessUnit);
+        String dimensionlessUnitName = "";
+        rootNode = new Node(dimensionlessUnitName);
         nodes.add(rootNode);
-        bindUnit(dimensionlessUnit, rootUnit, BigDecimal.ONE);
+        bindNode(dimensionlessUnitName, rootUnit, BigDecimal.ONE);
     }
 
-    Node findNode(Unit unit){
-        Optional<Node> result = nodes.stream().filter(e -> e.getUnit().equals(unit)).findFirst();
+    Node findNode(String unitName){
+        Optional<Node> result = nodes.stream().filter(e -> e.getUnitName().equals(unitName)).findFirst();
         if(result.isEmpty()){
             throw new NoSuchElementException();
         }
         return result.get();
     }
 
-    public void bindUnit(Unit existingUnit, Unit newUnit, BigDecimal rate) {
+    public void bindNode(String existingUnit, String newUnit, BigDecimal rate) {
         Node existingNode = findNode(existingUnit);
         Node newNode = new Node(newUnit);
         nodes.add(newNode);
         existingNode.addEdge(newNode, rate);
     }
+
+
 
     public boolean isRootNode(Node node){
         return node.equals(rootNode);
