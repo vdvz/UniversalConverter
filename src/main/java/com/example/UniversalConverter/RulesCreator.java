@@ -12,19 +12,19 @@ public class RulesCreator {
 
     public static Rules createRules(String pathToResourceWithRules) throws IOException {
         System.out.println(pathToResourceWithRules);
-        Map<Unit, MeasureGraph> knownUnits = new HashMap<>();
+        Map<String, MeasureGraph> knownUnits = new HashMap<>();
         try (ConversionRulesReader reader = new ConversionRulesReader(pathToResourceWithRules)) {
             String[] lines;
 
             while ((lines = reader.getNextValues()) != null) {
-                Unit firstUnit = new Unit(lines[0]);
-                Unit secondUnit =  new Unit(lines[1]);
+                Node firstNode = new Node(lines[0]);
+                Node secondNode =  new Node(lines[1]);
                 BigDecimal rate = new BigDecimal(lines[2]);
                 MeasureGraph graph;
-                if ((graph = knownUnits.get(firstUnit)) != null) {
-                    if (knownUnits.containsKey(secondUnit)) {
-                        MeasureGraph attachableGraph = knownUnits.get(secondUnit);
-                        graph.bindGraph(firstUnit, secondUnit, rate, attachableGraph);
+                if ((graph = knownUnits.get(firstNode)) != null) {
+                    if (knownUnits.containsKey(secondNode)) {
+                        MeasureGraph attachableGraph = knownUnits.get(secondNode);
+                        graph.bindGraph(firstNode, secondNode, rate, attachableGraph);
                         MeasureGraph finalGraph = graph;
                         knownUnits.forEach((unit, measureGraph) -> {
                             if(measureGraph.equals(attachableGraph)){
@@ -32,17 +32,17 @@ public class RulesCreator {
                             }
                         });
                     } else {
-                        graph.bindUnit(firstUnit, secondUnit, rate);
-                        knownUnits.put(secondUnit, graph);
+                        graph.bindNode(firstNode, secondNode, rate);
+                        knownUnits.put(secondNode.getUnitName(), graph);
                     }
-                } else if ((graph = knownUnits.get(secondUnit)) != null) {
-                    graph.bindUnit(secondUnit, firstUnit, rate);
-                    knownUnits.put(firstUnit, graph);
+                } else if ((graph = knownUnits.get(secondNode)) != null) {
+                    graph.bindNode(secondNode, firstNode, rate);
+                    knownUnits.put(firstNode.getUnitName(), graph);
                 } else {
-                    graph = new MeasureGraph(firstUnit);
-                    knownUnits.put(firstUnit, graph);
-                    graph.bindUnit(firstUnit, secondUnit, rate);
-                    knownUnits.put(secondUnit, graph);
+                    graph = new MeasureGraph(firstNode);
+                    knownUnits.put(firstNode.getUnitName(), graph);
+                    graph.bindNode(firstNode, secondNode, rate);
+                    knownUnits.put(secondNode.getUnitName(), graph);
                 }
             }
 

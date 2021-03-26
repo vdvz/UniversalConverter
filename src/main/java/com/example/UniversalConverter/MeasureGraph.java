@@ -15,10 +15,9 @@ public class MeasureGraph {
 
     public MeasureGraph(Node rootNode) {
         nodes = new HashSet<>();
-        String dimensionlessUnitName = "";
-        rootNode = new Node(dimensionlessUnitName);
+        this.rootNode = rootNode;
         nodes.add(rootNode);
-        bindNode(dimensionlessUnitName, rootUnit, BigDecimal.ONE);
+        //bindNode(dimensionlessUnitName, rootUnit, BigDecimal.ONE);
     }
 
     Node findNode(String unitName){
@@ -29,36 +28,22 @@ public class MeasureGraph {
         return result.get();
     }
 
-    public void bindNode(String existingUnit, String newUnit, BigDecimal rate) {
-        Node existingNode = findNode(existingUnit);
-        Node newNode = new Node(newUnit);
+    public void bindNode(Node existingNode, Node newNode, BigDecimal rate) {
         nodes.add(newNode);
         existingNode.addEdge(newNode, rate);
     }
-
-
 
     public boolean isRootNode(Node node){
         return node.equals(rootNode);
     }
 
-    public void connectUnits(Unit unit1, Unit unit2, BigDecimal rate){
-        Node firstExistingNode = findNode(unit1);
-        Node secondExistingNode = findNode(unit2);
-        firstExistingNode.addEdge(secondExistingNode, rate);
-    }
-
-    public void bindGraph(Unit existingUnit, Unit newUnit, BigDecimal rate, MeasureGraph newGraph){
+    public void bindGraph(Node existingNode, Node newNode, BigDecimal rate, MeasureGraph newGraph){
         nodes.addAll(newGraph.getNodes());
-        connectUnits(existingUnit, newUnit, rate);
+        existingNode.addEdge(newNode, rate);
     }
 
     public Set<Node> getNodes() {
         return nodes;
-    }
-
-    Map<Node, BigDecimal> getNeighbors(Unit unit){
-        return findNode(unit).getNeighbors();
     }
 
 }

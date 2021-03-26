@@ -1,6 +1,7 @@
 package com.example.UniversalConverter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MeasureGroup{
 
@@ -52,6 +53,12 @@ public class MeasureGroup{
 
     boolean isValidConversion(Unit from, Unit to){
         return false;
+    }
+
+    boolean isConvertible(MeasureGroup toGroup){
+        List<Integer> list = this.units.stream().map(Unit::getPower).collect(Collectors.toList());
+        toGroup.units.forEach(e->list.remove(e.getPower()));
+        return list.isEmpty();
     }
 
     @Override

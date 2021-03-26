@@ -45,16 +45,13 @@ public class Expression {
         this.k = k;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Expression that = (Expression) o;
-        return this.measures.containsAll(that.measures);
-    }
+    public boolean isConversionAvailable(final Expression expression){
+        if (this == expression) return true;
+        if (expression == null || getClass() != expression.getClass()) return false;
 
-    @Override
-    public int hashCode() {
-        return this.measures.stream().mapToInt(MeasureGroup::hashCode).sum();
+        return measures.stream().allMatch(e -> {
+            MeasureGroup measureGroup = expression.measures.get(measures.indexOf(e));
+            return e.isConvertible(measureGroup);
+        });
     }
 }

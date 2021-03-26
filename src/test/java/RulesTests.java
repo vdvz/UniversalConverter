@@ -1,7 +1,6 @@
 import com.example.UniversalConverter.*;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -60,16 +59,17 @@ public class RulesTests {
         assert rules != null;
         System.out.println("Graphs");
         rules.getKnownUnits().stream().distinct().forEach(System.out::println);
-        assertTrue(rules.isKnownUnit(new Unit("м")));
-        assertFalse(rules.isKnownUnit(new Unit("дм")));
+        assertTrue(rules.isKnownNode(new Node("м")));
+        assertFalse(rules.isKnownNode(new Node("дм")));
 
 
         String req = "км/м";
         String req1 = "см";
         String req2 = "ч";
-        Expression expression = ConversionRequestParser.parseStringToExpression(req, rules);
-        Expression expression1 = ConversionRequestParser.parseStringToExpression(req1, rules);
-        Expression expression2 = ConversionRequestParser.parseStringToExpression(req2, rules);
+        ConversionRequestParser parser = new ConversionRequestParser();
+        Expression expression = parser.parseStringToExpression(req, rules);
+        Expression expression1 = parser.parseStringToExpression(req1, rules);
+        Expression expression2 = parser.parseStringToExpression(req2, rules);
 
         PreProcessingPhase preProcessing = new PreProcessingPhase();
 
@@ -87,7 +87,7 @@ public class RulesTests {
         measures.forEach(System.out::println);
 
 
-        assertTrue(measures.contains(new MeasureGroup(rules.getGraph(new Unit("см")))));
+        assertTrue(measures.contains(new MeasureGroup(rules.getGraph("см"))));
         //assertFalse(measures.contains(new MeasureGroup(rules.getGraph(new Unit("ч")))));
 
     }

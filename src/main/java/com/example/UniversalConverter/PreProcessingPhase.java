@@ -3,7 +3,7 @@ package com.example.UniversalConverter;
 public class PreProcessingPhase {
 
     void checkDimension(final Expression leftHand, final Expression rightHand) throws IncorrectDimensionException {
-        if(!leftHand.equals(rightHand)){
+        if(!leftHand.isConversionAvailable(rightHand)){
             throw new IncorrectDimensionException();
         }
     }

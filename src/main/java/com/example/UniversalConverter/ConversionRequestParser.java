@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 public class ConversionRequestParser {
 
 
-    public static Expression parseStringToExpression(String value_str, Rules rules){
+    public Expression parseStringToExpression(String value_str, Rules rules){
         Map<MeasureGraph, MeasureGroup> map = new HashMap<>();
         List<MeasureGroup> groups = new ArrayList<>();
         String[] sub = value_str.split("/");
@@ -21,7 +21,7 @@ public class ConversionRequestParser {
 
         for (Unit unit: numerator) {
             //Check if unit exists and if so then get graph
-            MeasureGraph graph = rules.getGraph(unit); //TODO mb make non-static method
+            MeasureGraph graph = rules.getGraph(unit.getName());
             MeasureGroup group;
             if((group = map.get(graph))!=null){
                 group.addUnit(unit, unit.getPower());

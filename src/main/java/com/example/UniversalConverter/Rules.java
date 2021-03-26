@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class Rules {
 
-    private final Map<Unit, MeasureGraph> KnownUnits;
+    private final Map<String, MeasureGraph> KnownUnits;
 
     public Collection<MeasureGraph> getKnownUnits() {
         return  KnownUnits.values();
@@ -20,16 +20,16 @@ public class Rules {
         KnownUnits = new HashMap<>();
     }
 
-    Rules(Map<Unit, MeasureGraph> _knownUnits) {
+    Rules(Map<String, MeasureGraph> _knownUnits) {
         KnownUnits = _knownUnits;
     }
 
-    public boolean isKnownUnit(Unit unit) {
-        return KnownUnits.containsKey(unit);
+    public boolean isKnownNode(Node node) {
+        return KnownUnits.containsKey(node);
     }
 
-    public MeasureGraph getGraph(Unit unit){
-        return KnownUnits.get(unit);
+    public MeasureGraph getGraph(String measureName){
+        return KnownUnits.get(measureName);
     }
 
 }

@@ -34,24 +34,24 @@ public class ProcessingPhase {
 
     BigDecimal convertGroup(MeasureGroup group){
         BigDecimal resultK = BigDecimal.ONE;
-        MeasureGraph graph = group.getGraph();
+        MeasureGraph conversionGraph = group.getGraph();
 
         while(!group.isEmpty()){
-            Queue<MultiplicationUnit> queue = new LinkedList<>();
+            Queue<MultiplicationUnit> neighbors = new LinkedList<>();
             Unit from = group.getNext();
-            graph.getNeighbors(from).forEach((node, bigDecimal) -> {
-                    queue.add(new MultiplicationUnit(node, bigDecimal));
+            conversionGraph.findNode(from.getName()).getNeighbors().forEach((node, bigDecimal) -> {
+                    neighbors.add(new MultiplicationUnit(node, bigDecimal));
             });
 
-            while(!queue.isEmpty()) {
-                MultiplicationUnit mlUnit = queue.remove();
+            while(!neighbors.isEmpty()) {
+                MultiplicationUnit mlUnit = neighbors.remove();
                 Node currentNode = mlUnit.getNode();
 
                 //check if node exists in the group, if not push all neighbors except the neighbor from which we came
-                //or if node is a rootNode which means non-dimension node(each graph has non-dimension node and it is always a root)
+                //or if node is a rootNode which means non-dimension node(each conversionGraph has non-dimension node and it is always a root)
                 //otherwise resultK*=multiplyUnit and exit from cycle
                 Unit to = group.getUnitByName(currentNode.getUnitName());
-                if (group.isValidConversion(from, to) || graph.isRootNode(currentNode)) {
+                if (group.isValidConversion(from, to) || conversionGraph.isRootNode(currentNode)) {
                     int power = to.getPower();
                     BigDecimal currentK = mlUnit.getK();
                     if(power < 0){
@@ -69,7 +69,7 @@ public class ProcessingPhase {
                 } else {
                     //make step
                     currentNode.getNeighbors().forEach((node, transitionK) -> {
-                        queue.add(new MultiplicationUnit(node, mlUnit.getK().multiply(transitionK)));
+                        neighbors.add(new MultiplicationUnit(node, mlUnit.getK().multiply(transitionK)));
                     });
                 }
             }
