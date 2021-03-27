@@ -17,32 +17,53 @@ public class RulesCreator {
             String[] lines;
 
             while ((lines = reader.getNextValues()) != null) {
-                Node firstNode = new Node(lines[0]);
-                Node secondNode =  new Node(lines[1]);
+                String firstNodeName = lines[0];
+                String secondNodeName =  lines[1];
                 BigDecimal rate = new BigDecimal(lines[2]);
-                MeasureGraph graph;
-                if ((graph = knownUnits.get(firstNode.getUnitName())) != null) {
-                    if (knownUnits.containsKey(secondNode.getUnitName())) {
-                        MeasureGraph attachableGraph = knownUnits.get(secondNode.getUnitName());
-                        graph.bindGraph(firstNode, secondNode, rate, attachableGraph);
-                        MeasureGraph finalGraph = graph;
+                MeasureGraph existingGraph;
+                if ((existingGraph = knownUnits.get(secondNodeName)) != null) {
+
+                    MeasureGraph attachableGraph;
+                    if ((attachableGraph = knownUnits.get(firstNodeName)) != null) {
+                        Node firstNode = attachableGraph.getNodeByName(firstNodeName);
+                        Node secondNode = existingGraph.findNode(secondNodeName);
+                        existingGraph.bindGraph(firstNode, secondNode, rate, attachableGraph);
+                        MeasureGraph finalGraph = existingGraph;
                         knownUnits.forEach((unit, measureGraph) -> {
                             if(measureGraph.equals(attachableGraph)){
                                 knownUnits.replace(unit, finalGraph);
                             }
                         });
                     } else {
-                        graph.bindNode(firstNode, secondNode, rate);
-                        knownUnits.put(secondNode.getUnitName(), graph);
+                        existingGraph.bindNode(new Node(firstNodeName), existingGraph.getNodeByName(secondNodeName), rate);
+                        knownUnits.put(firstNodeName, existingGraph);
                     }
-                } else if ((graph = knownUnits.get(secondNode.getUnitName())) != null) {
-                    graph.bindNode(secondNode, firstNode, rate);
-                    knownUnits.put(firstNode.getUnitName(), graph);
+                } else if ((existingGraph = knownUnits.get(firstNodeName)) != null) {
+
+                    MeasureGraph attachableGraph;
+                    if ((attachableGraph = knownUnits.get(secondNodeName)) != null) {
+                        Node firstNode = attachableGraph.getNodeByName(secondNodeName);
+                        Node secondNode = existingGraph.findNode(firstNodeName);
+
+                        existingGraph.bindGraph(firstNode, secondNode, rate, attachableGraph);
+                        MeasureGraph finalGraph = existingGraph;
+                        knownUnits.forEach((unit, measureGraph) -> {
+                            if(measureGraph.equals(attachableGraph)){
+                                knownUnits.replace(unit, finalGraph);
+                            }
+                        });
+                    } else {
+                        existingGraph.bindNode(new Node(secondNodeName), existingGraph.getNodeByName(firstNodeName), rate);
+                        knownUnits.put(secondNodeName, existingGraph);
+                    }
+
                 } else {
-                    graph = new MeasureGraph(firstNode);
-                    knownUnits.put(firstNode.getUnitName(), graph);
-                    graph.bindNode(firstNode, secondNode, rate);
-                    knownUnits.put(secondNode.getUnitName(), graph);
+                    Node secondNode = new Node(secondNodeName);
+                    Node firstNode = new Node(firstNodeName);
+                    existingGraph = new MeasureGraph(secondNode);
+                    knownUnits.put(secondNodeName, existingGraph);
+                    existingGraph.bindNode(firstNode, secondNode, rate);
+                    knownUnits.put(firstNodeName, existingGraph);
                 }
             }
 
@@ -51,4 +72,6 @@ public class RulesCreator {
         }
         return new Rules(knownUnits);
     }
+
+
 }

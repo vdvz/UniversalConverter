@@ -1,13 +1,16 @@
 import com.example.UniversalConverter.*;
+import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
+import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,7 +53,7 @@ public class RulesTests {
 
 
     @Test
-    public void graphCreationTest(){
+    public void graphCreationTest() throws InvalidStringForParsing {
         String path = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
         Rules rules = null;
         try {
@@ -120,10 +123,20 @@ public class RulesTests {
     @Test
     public void checkDimension(){
         String from = "км / м";
-        String to = "м / мм";
+        String to = " / мм";
 
-        Expression expression = parser.parseStringToExpression(from, rules);
-        Expression expression1 = parser.parseStringToExpression(to, rules);
+        Expression expression = null;
+        try {
+            expression = parser.parseStringToExpression(from, rules);
+        } catch (InvalidStringForParsing invalidStringForParsing) {
+            invalidStringForParsing.printStackTrace();
+        }
+        Expression expression1 = null;
+        try {
+            expression1 = parser.parseStringToExpression(to, rules);
+        } catch (InvalidStringForParsing invalidStringForParsing) {
+            invalidStringForParsing.printStackTrace();
+        }
 
 
         System.out.println(expression.toString());
@@ -134,10 +147,20 @@ public class RulesTests {
     @Test
     public void process(){
         String from = "км / м";
-        String to = "км / мм";
+        String to = " ";
 
-        Expression expression = parser.parseStringToExpression(from, rules);
-        Expression expression1 = parser.parseStringToExpression(to, rules);
+        Expression expression = null;
+        try {
+            expression = parser.parseStringToExpression(from, rules);
+        } catch (InvalidStringForParsing invalidStringForParsing) {
+            invalidStringForParsing.printStackTrace();
+        }
+        Expression expression1 = null;
+        try {
+            expression1 = parser.parseStringToExpression(to, rules);
+        } catch (InvalidStringForParsing invalidStringForParsing) {
+            invalidStringForParsing.printStackTrace();
+        }
 
         Expression ex = null;
         try {
@@ -146,13 +169,46 @@ public class RulesTests {
             e.printStackTrace();
         }
 
-        System.out.println(ex);
-
         assert ex != null;
 
+
+        System.out.println(rules);
+        System.out.println("Get nodes");
+        System.out.println("Known units " + rules.getKnownUnits());
+        rules.getKnownUnits().stream().map(MeasureGraph::getNodes).collect(Collectors.toSet()).forEach(e -> e.forEach(el -> {
+                System.out.println("Name " + el.getUnitName() + " count neighbors " + el.getNeighbors().size());
+                el.getNeighbors().forEach((ee, aa) -> System.out.println(ee.getUnitName()));
+            }
+        ));
+
+        System.out.println("Start convert");
         processingPhase.convert(ex);
 
         System.out.println(ex.getK());
+    }
+
+    @Test
+    public void testMeasureGroup(){
+        MeasureGraph graph = new MeasureGraph(new Node("test"));
+        MeasureGroup group = new MeasureGroup(graph);
+        MeasureGroup group1 = new MeasureGroup(graph);
+
+        Assert.assertEquals(group1, group);
+
+        Unit unit = new Unit("testUnit");
+        group.addUnit(unit, 2);
+        assertTrue(group.contains(unit));
+
+        Unit unit1 = new Unit("testUnit");
+        group.addUnit(unit1, -3);
+
+        assertEquals(group.getUnitByName("testUnit").getPower(), -1);
+
+        Unit unit2 = new Unit("testUnit");
+        group.addUnit(unit1, 1);
+
+        assertTrue(group.isEmpty());
+
     }
 
 

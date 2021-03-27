@@ -1,5 +1,7 @@
 package com.example.UniversalConverter;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.http.HttpResponse;
@@ -8,11 +10,10 @@ import java.net.http.HttpResponse;
 public class ConversionController {
 
     @PostMapping("/convert")
-    @ResponseBody
-    String getConversionRate(@RequestBody ConversionRequest request){
+    ResponseEntity<String> getConversionRate(@RequestBody ConversionRequest request){
         System.out.println(request.getFrom());
         System.out.println(request.getTo());
-        return "Ok";
+        return new ResponseEntity<>("answer", HttpStatus.OK);
     }
 
 

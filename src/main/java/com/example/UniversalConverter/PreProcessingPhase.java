@@ -1,5 +1,7 @@
 package com.example.UniversalConverter;
 
+import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
+
 public class PreProcessingPhase {
 
     public void checkDimension(final Expression leftHand, final Expression rightHand) throws IncorrectDimensionException {

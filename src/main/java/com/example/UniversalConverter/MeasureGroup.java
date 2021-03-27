@@ -1,5 +1,7 @@
 package com.example.UniversalConverter;
 
+import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -11,7 +13,7 @@ public class MeasureGroup{
         return graph;
     }
 
-    LinkedList<Unit> units = new LinkedList<>();
+    private final LinkedList<Unit> units = new LinkedList<>();
 
     public MeasureGroup(MeasureGraph graph) {
         this.graph = graph;
@@ -33,6 +35,8 @@ public class MeasureGroup{
     }
 
     public Unit getUnitByName(String unitName){
+        System.out.println("Here111 " + units);
+        units.forEach(e-> System.out.println(e.getName() + " POWER " + e.getPower()));
         Optional<Unit> result = units.stream().filter(e->e.getName().equals(unitName)).findFirst();
         return result.orElse(null);
     }
@@ -52,17 +56,11 @@ public class MeasureGroup{
         return units.remove();
     }
 
-    //TODO
-    boolean isValidConversion(Unit from, Unit to){
-        return false;
-    }
-
     public boolean isConvertible(final MeasureGroup toGroup){
         if(toGroup == null) return false;
-        long a = this.units.stream().mapToLong(Unit::getPower).sum();
-        long b = toGroup.units.stream().mapToLong(Unit::getPower).sum();
-        System.out.println(a + " " + b);
-        return a == b;
+        long firstDim = this.units.stream().mapToLong(Unit::getPower).sum();
+        long secondDim = toGroup.units.stream().mapToLong(Unit::getPower).sum();
+        return firstDim == secondDim;
     }
 
     @Override
@@ -88,9 +86,12 @@ public class MeasureGroup{
 
     @Override
     public String toString() {
-        return "MeasureGroup{" +
-                "graph=" + graph +
-                ", units=" + units +
-                '}';
+        return "MeasureGroup "
+                + "graph = " + graph +
+                " entities: " + units.stream().map(e -> "name: " + e.getName() + ", ").collect(Collectors.joining()) + " ]";
+    }
+
+    public void addUnit(Unit from) {
+        addUnit(from, from.getPower());
     }
 }

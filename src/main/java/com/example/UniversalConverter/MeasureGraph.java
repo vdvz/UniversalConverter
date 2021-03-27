@@ -17,35 +17,40 @@ public class MeasureGraph {
         nodes = new HashSet<>();
         this.rootNode = rootNode;
         nodes.add(rootNode);
-        //bindNode(dimensionlessUnitName, rootUnit, BigDecimal.ONE);
     }
 
     Node findNode(String unitName){
-        System.out.println(unitName);
         Optional<Node> result = nodes.stream().filter(e -> e.getUnitName().equals(unitName)).findFirst();
         return result.orElse(null);
     }
 
-    public void bindNode(Node existingNode, Node newNode, BigDecimal rate) {
-        nodes.add(newNode);
-        existingNode.addEdge(newNode, rate);
+    public void bindNode(Node fromNode, Node toNode, BigDecimal rate) {
+        nodes.add(fromNode);
+        nodes.add(toNode);
+        fromNode.addEdge(toNode, rate);
     }
 
     public boolean isRootNode(Node node){
         return node.equals(rootNode);
     }
 
-    public void bindGraph(Node existingNode, Node newNode, BigDecimal rate, MeasureGraph newGraph){
-        nodes.addAll(newGraph.getNodes());
-        existingNode.addEdge(newNode, rate);
+    public void bindGraph(Node fromNode, Node toNode, BigDecimal rate, MeasureGraph newGraph){
+        nodes.addAll(newGraph.nodes);
+        nodes.forEach(e-> System.out.println(e.getUnitName()));
+        fromNode.addEdge(toNode, rate);
     }
 
     public Set<Node> getNodes() {
         return nodes;
     }
 
+    public Node getNodeByName(String name) {
+        return nodes.stream().filter(e->e.getUnitName().equals(name)).findFirst().orElse(null);
+    }
+
     @Override
     public String toString() {
         return "MeasureGraph" + hashCode() + "\n";
     }
+
 }

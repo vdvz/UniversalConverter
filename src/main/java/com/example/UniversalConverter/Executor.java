@@ -1,5 +1,8 @@
 package com.example.UniversalConverter;
 
+import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
+import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
+
 import java.io.IOException;
 
 public class Executor {
@@ -17,7 +20,7 @@ public class Executor {
         }
     }
 
-    public void handleRequest(ConversionRequest request){
+    public void handleRequest(ConversionRequest request) throws InvalidStringForParsing {
         Expression from = parser.parseStringToExpression(request.getFrom(), rules);
         Expression to = parser.parseStringToExpression(request.getTo(), rules);
 

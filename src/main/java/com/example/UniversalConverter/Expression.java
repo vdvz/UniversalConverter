@@ -1,8 +1,9 @@
 package com.example.UniversalConverter;
 
+import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
+
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Этот класс описывает выражение K*[1st group of measure]*[2nd group of measure]..[n-th group of measure]

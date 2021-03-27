@@ -38,16 +38,18 @@ public class ProcessingPhase {
         MeasureGraph conversionGraph = group.getGraph();
 
         while(!group.isEmpty()){
-            System.out.println("Here");
             Queue<MultiplicationUnit> neighbors = new LinkedList<>();
             Unit from = group.getNext();
-            System.out.println(conversionGraph.findNode(from.getName()).toString());
-            conversionGraph.findNode(from.getName()).getNeighbors().forEach((node, bigDecimal) -> {
-                    neighbors.add(new MultiplicationUnit(node, bigDecimal));
+            Node fromNode = conversionGraph.findNode(from.getName());
+            if(conversionGraph.isRootNode(fromNode)){
+                group.addUnit(from);
+                continue;
+            }
+            fromNode.getNeighbors().forEach((node, conversionRate) -> {
+                    neighbors.add(new MultiplicationUnit(node, conversionRate));
             });
 
             while(!neighbors.isEmpty()) {
-                System.out.println("Here2");
                 MultiplicationUnit mlUnit = neighbors.remove();
                 Node currentNode = mlUnit.getNode();
 
@@ -55,7 +57,8 @@ public class ProcessingPhase {
                 //or if node is a rootNode which means non-dimension node(each conversionGraph has non-dimension node and it is always a root)
                 //otherwise resultK*=multiplyUnit and exit from cycle
                 Unit to = group.getUnitByName(currentNode.getUnitName());
-                if (!Objects.equals(to,null) || conversionGraph.isRootNode(currentNode)) {
+
+                if (!Objects.equals(to,null)) {
                     int power = from.getPower();
                     BigDecimal currentK = mlUnit.getK();
                     if(power < 0){
@@ -81,6 +84,7 @@ public class ProcessingPhase {
                 }
             }
         }
+
         return resultK;
     }
 
