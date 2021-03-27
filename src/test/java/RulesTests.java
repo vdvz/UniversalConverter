@@ -1,6 +1,7 @@
 import com.example.UniversalConverter.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -45,6 +46,8 @@ public class RulesTests {
         System.out.println(BigDecimal.ONE.divide(bd, 15, RoundingMode.HALF_UP));
 
     }
+
+
 
     @Test
     public void graphCreationTest(){
@@ -92,6 +95,65 @@ public class RulesTests {
 
     }
 
+
+    Rules rules = null;
+    String path = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
+
+    ConversionRequestParser parser;
+    PreProcessingPhase preProcessingPhase = new PreProcessingPhase();
+    ProcessingPhase processingPhase = new ProcessingPhase();
+    @Before
+    public void initForTest(){
+        try {
+            rules = RulesCreator.createRules(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        parser = new ConversionRequestParser();
+    }
+
+    @Test
+    public void checkRules(){
+        System.out.println(rules);
+    }
+
+    @Test
+    public void checkDimension(){
+        String from = "км / м";
+        String to = "м / мм";
+
+        Expression expression = parser.parseStringToExpression(from, rules);
+        Expression expression1 = parser.parseStringToExpression(to, rules);
+
+
+        System.out.println(expression.toString());
+        System.out.println(expression1.toString());
+        System.out.println(expression.isConversionAvailable(expression1));
+    }
+
+    @Test
+    public void process(){
+        String from = "км / м";
+        String to = "км / мм";
+
+        Expression expression = parser.parseStringToExpression(from, rules);
+        Expression expression1 = parser.parseStringToExpression(to, rules);
+
+        Expression ex = null;
+        try {
+            ex = preProcessingPhase.combine(expression, expression1);
+        } catch (IncorrectDimensionException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(ex);
+
+        assert ex != null;
+
+        processingPhase.convert(ex);
+
+        System.out.println(ex.getK());
+    }
 
 
 }

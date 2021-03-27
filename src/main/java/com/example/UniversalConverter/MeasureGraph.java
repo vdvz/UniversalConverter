@@ -21,11 +21,9 @@ public class MeasureGraph {
     }
 
     Node findNode(String unitName){
+        System.out.println(unitName);
         Optional<Node> result = nodes.stream().filter(e -> e.getUnitName().equals(unitName)).findFirst();
-        if(result.isEmpty()){
-            throw new NoSuchElementException();
-        }
-        return result.get();
+        return result.orElse(null);
     }
 
     public void bindNode(Node existingNode, Node newNode, BigDecimal rate) {
@@ -46,4 +44,8 @@ public class MeasureGraph {
         return nodes;
     }
 
+    @Override
+    public String toString() {
+        return "MeasureGraph" + hashCode() + "\n";
+    }
 }

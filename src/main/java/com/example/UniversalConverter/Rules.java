@@ -32,4 +32,10 @@ public class Rules {
         return KnownUnits.get(measureName);
     }
 
+    @Override
+    public String toString() {
+        return "Rules{" +
+                "KnownUnits=" + KnownUnits +
+                '}';
+    }
 }

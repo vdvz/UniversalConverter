@@ -32,8 +32,9 @@ public class MeasureGroup{
         }
     }
 
-    public Unit getUnitByName(String unitName){//may throw nosuchelementexception
-        return units.stream().filter(e->e.getName().equals(unitName)).findFirst().get();
+    public Unit getUnitByName(String unitName){
+        Optional<Unit> result = units.stream().filter(e->e.getName().equals(unitName)).findFirst();
+        return result.orElse(null);
     }
 
     public MeasureGroup multiply(MeasureGroup measureGroup) throws IncorrectDimensionException {
@@ -51,14 +52,17 @@ public class MeasureGroup{
         return units.remove();
     }
 
+    //TODO
     boolean isValidConversion(Unit from, Unit to){
         return false;
     }
 
-    boolean isConvertible(MeasureGroup toGroup){
-        List<Integer> list = this.units.stream().map(Unit::getPower).collect(Collectors.toList());
-        toGroup.units.forEach(e->list.remove(e.getPower()));
-        return list.isEmpty();
+    public boolean isConvertible(final MeasureGroup toGroup){
+        if(toGroup == null) return false;
+        long a = this.units.stream().mapToLong(Unit::getPower).sum();
+        long b = toGroup.units.stream().mapToLong(Unit::getPower).sum();
+        System.out.println(a + " " + b);
+        return a == b;
     }
 
     @Override
@@ -80,5 +84,13 @@ public class MeasureGroup{
 
     public boolean isEmpty() {
         return units.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "MeasureGroup{" +
+                "graph=" + graph +
+                ", units=" + units +
+                '}';
     }
 }

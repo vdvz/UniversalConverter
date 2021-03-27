@@ -9,7 +9,7 @@ import java.util.Objects;
  */
 public class Expression {
 
-    private BigDecimal k;
+    private BigDecimal k = BigDecimal.ONE;
     final private List<MeasureGroup> measures;
 
     Expression(List<MeasureGroup> measureGroups){
@@ -53,5 +53,14 @@ public class Expression {
             MeasureGroup measureGroup = expression.measures.get(measures.indexOf(e));
             return e.isConvertible(measureGroup);
         });
+    }
+
+
+    @Override
+    public String toString() {
+        return "Expression{" +
+                "k=" + k +
+                ", measures=" + measures +
+                '}';
     }
 }

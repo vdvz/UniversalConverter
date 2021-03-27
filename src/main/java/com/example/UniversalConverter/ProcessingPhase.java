@@ -3,6 +3,7 @@ package com.example.UniversalConverter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.Queue;
 
 
@@ -12,7 +13,7 @@ public class ProcessingPhase {
     private final int maxScale;
     private final int deltaScale;
 
-    ProcessingPhase(){
+    public ProcessingPhase(){
         maxScale = 90;
         deltaScale = 15;
         roundPolitic = RoundingMode.HALF_DOWN;
@@ -24,7 +25,7 @@ public class ProcessingPhase {
         this.roundPolitic = roundPolitic;
     }
 
-    void convert(Expression e){
+    public void convert(Expression e){
         BigDecimal K = e.getK();
         for (MeasureGroup gr: e.getMeasures()) {
             K = K.multiply(convertGroup(gr));
@@ -37,13 +38,16 @@ public class ProcessingPhase {
         MeasureGraph conversionGraph = group.getGraph();
 
         while(!group.isEmpty()){
+            System.out.println("Here");
             Queue<MultiplicationUnit> neighbors = new LinkedList<>();
             Unit from = group.getNext();
+            System.out.println(conversionGraph.findNode(from.getName()).toString());
             conversionGraph.findNode(from.getName()).getNeighbors().forEach((node, bigDecimal) -> {
                     neighbors.add(new MultiplicationUnit(node, bigDecimal));
             });
 
             while(!neighbors.isEmpty()) {
+                System.out.println("Here2");
                 MultiplicationUnit mlUnit = neighbors.remove();
                 Node currentNode = mlUnit.getNode();
 
@@ -51,8 +55,8 @@ public class ProcessingPhase {
                 //or if node is a rootNode which means non-dimension node(each conversionGraph has non-dimension node and it is always a root)
                 //otherwise resultK*=multiplyUnit and exit from cycle
                 Unit to = group.getUnitByName(currentNode.getUnitName());
-                if (group.isValidConversion(from, to) || conversionGraph.isRootNode(currentNode)) {
-                    int power = to.getPower();
+                if (!Objects.equals(to,null) || conversionGraph.isRootNode(currentNode)) {
+                    int power = from.getPower();
                     BigDecimal currentK = mlUnit.getK();
                     if(power < 0){
                         //a^(-i) <=> 1/(a^i)
@@ -65,6 +69,9 @@ public class ProcessingPhase {
                     }else{
                         resultK = resultK.multiply(currentK.pow(power));
                     }
+
+                    group.addUnit(to, power);
+
                     break;
                 } else {
                     //make step

@@ -21,9 +21,9 @@ public class RulesCreator {
                 Node secondNode =  new Node(lines[1]);
                 BigDecimal rate = new BigDecimal(lines[2]);
                 MeasureGraph graph;
-                if ((graph = knownUnits.get(firstNode)) != null) {
-                    if (knownUnits.containsKey(secondNode)) {
-                        MeasureGraph attachableGraph = knownUnits.get(secondNode);
+                if ((graph = knownUnits.get(firstNode.getUnitName())) != null) {
+                    if (knownUnits.containsKey(secondNode.getUnitName())) {
+                        MeasureGraph attachableGraph = knownUnits.get(secondNode.getUnitName());
                         graph.bindGraph(firstNode, secondNode, rate, attachableGraph);
                         MeasureGraph finalGraph = graph;
                         knownUnits.forEach((unit, measureGraph) -> {
@@ -35,7 +35,7 @@ public class RulesCreator {
                         graph.bindNode(firstNode, secondNode, rate);
                         knownUnits.put(secondNode.getUnitName(), graph);
                     }
-                } else if ((graph = knownUnits.get(secondNode)) != null) {
+                } else if ((graph = knownUnits.get(secondNode.getUnitName())) != null) {
                     graph.bindNode(secondNode, firstNode, rate);
                     knownUnits.put(firstNode.getUnitName(), graph);
                 } else {

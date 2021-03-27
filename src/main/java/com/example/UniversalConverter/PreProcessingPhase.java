@@ -2,13 +2,13 @@ package com.example.UniversalConverter;
 
 public class PreProcessingPhase {
 
-    void checkDimension(final Expression leftHand, final Expression rightHand) throws IncorrectDimensionException {
+    public void checkDimension(final Expression leftHand, final Expression rightHand) throws IncorrectDimensionException {
         if(!leftHand.isConversionAvailable(rightHand)){
             throw new IncorrectDimensionException();
         }
     }
 
-    Expression combine(Expression firstExpression, Expression secondExpression) throws IncorrectDimensionException {
+    public Expression combine(Expression firstExpression, Expression secondExpression) throws IncorrectDimensionException {
         return secondExpression.multiply(firstExpression.invert());
     }
 
