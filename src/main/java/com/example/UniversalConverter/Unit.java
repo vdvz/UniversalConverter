@@ -8,8 +8,6 @@ public class Unit implements Unit_I{
 
     private int power;
 
-    // "" - безразмерная величина
-    //Степень безразмерной величины всегда единица => ""^1 * ""^(-1) = 1
     public Unit(String _name){
         Name = _name;
         power = 1;
@@ -30,7 +28,6 @@ public class Unit implements Unit_I{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Unit unit = (Unit) o;
-        //For nulls: true if both are null; false if only once
         return Objects.equals(Name, unit.Name);
     }
 
@@ -49,9 +46,6 @@ public class Unit implements Unit_I{
 
     @Override
     public String toString() {
-        return "Unit{" +
-                "Name='" + Name + '\'' +
-                ", power=" + power +
-                '}';
+        return "Unit name '" + Name + " , power = " + power ;
     }
 }

@@ -4,19 +4,20 @@ import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 
 public class PreProcessingPhase {
 
-    public void checkDimension(final Expression leftHand, final Expression rightHand) throws IncorrectDimensionException {
-        if(!leftHand.isConversionAvailable(rightHand)){
+    public static void checkDimension(final Expression expression) throws IncorrectDimensionException {
+        if(!expression.isConversionAvailable()){
             throw new IncorrectDimensionException();
         }
     }
 
-    public Expression combine(Expression firstExpression, Expression secondExpression) throws IncorrectDimensionException {
+    public static Expression combine(Expression firstExpression, Expression secondExpression) {
         return secondExpression.multiply(firstExpression.invert());
     }
 
-    public Expression step(Expression leftHand, Expression rightHand) throws IncorrectDimensionException {
-        checkDimension(leftHand, rightHand);
-        return combine(leftHand, rightHand);
+    public static Expression preprocessing(Expression fromExpression, Expression toExpression) throws IncorrectDimensionException {
+        Expression expression = combine(fromExpression, toExpression);
+        checkDimension(expression);
+        return expression;
     }
 
 }

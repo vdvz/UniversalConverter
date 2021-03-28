@@ -25,11 +25,11 @@ public class ConversionRequestParser {
         String[] sub = sourceStr.split("/");
 
         String numerator_str = sub[0];
-        List<Unit> numerator = Arrays.stream(numerator_str.split("\\*")).map(e -> new Unit(e.trim())).collect(Collectors.toList());
+        List<Unit> numerator = Arrays.stream(numerator_str.split("\\*")).map(String::trim).filter(e->!e.equals("1")).map(Unit::new).collect(Collectors.toList());
 
         if(sub.length==2){
             String denominator_str = sub[1];
-            Arrays.stream(denominator_str.split("\\*")).map(e -> new Unit(e.trim(), -1)).forEach(numerator::add);
+            Arrays.stream(denominator_str.split("\\*")).map(String::trim).filter(e->!e.equals("1")).map(e -> new Unit(e, -1)).forEach(numerator::add);
         }
 
         for (Unit unit: numerator) {

@@ -1,58 +1,46 @@
 import com.example.UniversalConverter.*;
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
 public class RulesTests {
+    static Rules rules = null;
+    static String rulePath = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
 
-    @Test
-    public void some(){
-        String a = "sdsadsa";
-        System.out.println((int) Arrays.stream(a.split("\\\\")).count());
-        //.forEach(System.out::println);
+    static ConversionRequestParser parser = new ConversionRequestParser();
+    PreProcessingPhase preProcessingPhase = new PreProcessingPhase();
+    ProcessingPhase processingPhase = new ProcessingPhase();
 
-    }
-
-
-    @Before
-    public void initGraph(){
-
-    }
-
-    @Test
-    public void graphTest(){
-
+    @BeforeAll
+    public static void initForTest(){
+        try {
+            rules = RulesCreator.createRules(rulePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
-    public void parsingTest(){
-        //Expression e = ConversionRequestParser.parseStringToExpression("см*мм*км/кг");
-
-    }
-
-    @Test
-    public void bigDec(){
-        BigDecimal bd = new BigDecimal(60);
-        System.out.println(BigDecimal.ONE.divide(bd, RoundingMode.HALF_DOWN));
-        System.out.println(BigDecimal.ONE.divide(bd, 15, RoundingMode.HALF_UP));
-
-    }
-
-
-
-    @Test
+    @DisplayName("building graph tests")
     public void graphCreationTest() throws InvalidStringForParsing {
         String path = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
         Rules rules = null;
@@ -65,8 +53,6 @@ public class RulesTests {
         assert rules != null;
         System.out.println("Graphs");
         rules.getKnownUnits().stream().distinct().forEach(System.out::println);
-        assertTrue(rules.isKnownNode(new Node("м")));
-        assertFalse(rules.isKnownNode(new Node("дм")));
 
 
         String req = "км/м";
@@ -79,13 +65,6 @@ public class RulesTests {
 
         PreProcessingPhase preProcessing = new PreProcessingPhase();
 
-        Expression expr;
-        try {
-            expr = preProcessing.step(expression, expression1);
-            expr = preProcessing.step(expression, expression2);
-        } catch (IncorrectDimensionException e) {
-            e.printStackTrace();
-        }
 
 
         System.out.println("Measures");
@@ -96,28 +75,6 @@ public class RulesTests {
         assertTrue(measures.contains(new MeasureGroup(rules.getGraph("см"))));
         //assertFalse(measures.contains(new MeasureGroup(rules.getGraph(new Unit("ч")))));
 
-    }
-
-
-    Rules rules = null;
-    String path = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
-
-    ConversionRequestParser parser;
-    PreProcessingPhase preProcessingPhase = new PreProcessingPhase();
-    ProcessingPhase processingPhase = new ProcessingPhase();
-    @Before
-    public void initForTest(){
-        try {
-            rules = RulesCreator.createRules(path);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        parser = new ConversionRequestParser();
-    }
-
-    @Test
-    public void checkRules(){
-        System.out.println(rules);
     }
 
     @Test
@@ -138,56 +95,10 @@ public class RulesTests {
             invalidStringForParsing.printStackTrace();
         }
 
-
-        System.out.println(expression.toString());
-        System.out.println(expression1.toString());
-        System.out.println(expression.isConversionAvailable(expression1));
     }
 
     @Test
-    public void process(){
-        String from = "км / м";
-        String to = " ";
-
-        Expression expression = null;
-        try {
-            expression = parser.parseStringToExpression(from, rules);
-        } catch (InvalidStringForParsing invalidStringForParsing) {
-            invalidStringForParsing.printStackTrace();
-        }
-        Expression expression1 = null;
-        try {
-            expression1 = parser.parseStringToExpression(to, rules);
-        } catch (InvalidStringForParsing invalidStringForParsing) {
-            invalidStringForParsing.printStackTrace();
-        }
-
-        Expression ex = null;
-        try {
-            ex = preProcessingPhase.combine(expression, expression1);
-        } catch (IncorrectDimensionException e) {
-            e.printStackTrace();
-        }
-
-        assert ex != null;
-
-
-        System.out.println(rules);
-        System.out.println("Get nodes");
-        System.out.println("Known units " + rules.getKnownUnits());
-        rules.getKnownUnits().stream().map(MeasureGraph::getNodes).collect(Collectors.toSet()).forEach(e -> e.forEach(el -> {
-                System.out.println("Name " + el.getUnitName() + " count neighbors " + el.getNeighbors().size());
-                el.getNeighbors().forEach((ee, aa) -> System.out.println(ee.getUnitName()));
-            }
-        ));
-
-        System.out.println("Start convert");
-        processingPhase.convert(ex);
-
-        System.out.println(ex.getK());
-    }
-
-    @Test
+    @DisplayName("test for measure group")
     public void testMeasureGroup(){
         MeasureGraph graph = new MeasureGraph(new Node("test"));
         MeasureGroup group = new MeasureGroup(graph);
@@ -208,8 +119,71 @@ public class RulesTests {
         group.addUnit(unit1, 1);
 
         assertTrue(group.isEmpty());
-
     }
 
+    /*For test
+    String from = "м";
+    String to = "км*с/ч";
+    */
+    static class TestRequest{
+        final ConversionRequest request;
+        final BigDecimal answer;
+
+        TestRequest(ConversionRequest request, BigDecimal answer){
+            this.request = request;
+            this.answer = answer;
+        }
+    }
+
+    public static Stream<TestRequest> sourcesForCorrectTests() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return Stream.of(
+                new TestRequest(mapper.readValue("{\"from\" : \"км\", \"to\" : \"м\"}", ConversionRequest.class), new BigDecimal("1000")),
+                new TestRequest(mapper.readValue("{\"from\" : \"1/м\", \"to\" : \"1/км\"}", ConversionRequest.class), new BigDecimal("1000")),
+                new TestRequest(mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"1/м\"}", ConversionRequest.class), new BigDecimal("0.001")),
+                new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км\"}", ConversionRequest.class), new BigDecimal("0.001")),
+                new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"мин\"}", ConversionRequest.class), new BigDecimal("60"))
+        );
+    }
+
+    public static Stream<ConversionRequest> sourcesForIncorrectTests(){
+        ObjectMapper mapper = new ObjectMapper();
+        return Stream.of(
+
+        );
+    }
+
+    @ParameterizedTest(name = "simple tests with right answer")
+    @MethodSource("sourcesForCorrectTests")
+    public void simpleRightTests(TestRequest testRequest){
+        ConversionRequest request = testRequest.request;
+        BigDecimal answer = testRequest.answer;
+        Expression from = null;
+        Expression to = null;
+        try {
+            from = parser.parseStringToExpression(request.getFrom(), rules);
+            to = parser.parseStringToExpression(request.getTo(), rules);
+        } catch (InvalidStringForParsing invalidStringForParsing) {
+            invalidStringForParsing.printStackTrace();
+        }
+
+        Expression finalEx = null;
+        assert from != null;
+        assert to != null;
+        finalEx = PreProcessingPhase.combine(from, to);
+
+        assert finalEx != null;
+        if(finalEx.isConversionAvailable()){
+            processingPhase.convert(finalEx);
+        }
+
+        assertEquals(answer, finalEx.getK());
+    }
+
+
+    @ParameterizedTest(name = "simple tests with exception")
+    @MethodSource("sourcesForIncorrectTests")
+    public void simpleTestsWithExceptions(){
+    }
 
 }

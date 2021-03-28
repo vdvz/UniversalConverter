@@ -1,9 +1,12 @@
 package com.example.UniversalConverter;
 
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
+import org.apache.commons.collections4.ArrayStack;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Этот класс описывает выражение K*[1st group of measure]*[2nd group of measure]..[n-th group of measure]
@@ -22,16 +25,20 @@ public class Expression {
         return this;
     }
 
-    public Expression multiply(Expression e) throws IncorrectDimensionException {
-        for (MeasureGroup measureGroup: e.getMeasures()) {
-            int index = measures.indexOf(measureGroup);
-            if(index != -1){
-                measures.add(measureGroup.multiply(measures.remove(index)));
+    public Expression multiply(Expression e)  {
+        List<MeasureGroup> measureGroups = new ArrayList<>(measures);
+        for (MeasureGroup gr: e.getMeasures()) {
+            int index = measureGroups.indexOf(gr);
+            if(index != -1) {
+                try {
+                    measureGroups.add(gr.multiply(measures.remove(index)));
+                } catch (IncorrectDimensionException ignored) {
+                }
             }else{
-                throw new IncorrectDimensionException();
+                measureGroups.add(gr);
             }
         }
-        return this;
+        return new Expression(measureGroups);
     }
 
     public List<MeasureGroup> getMeasures() {
@@ -46,22 +53,15 @@ public class Expression {
         this.k = k;
     }
 
-    public boolean isConversionAvailable(final Expression expression){
-        if (this == expression) return true;
-        if (expression == null || getClass() != expression.getClass()) return false;
-
-        return measures.stream().allMatch(e -> {
-            MeasureGroup measureGroup = expression.measures.get(measures.indexOf(e));
-            return e.isConvertible(measureGroup);
-        });
+    public boolean isConversionAvailable(){
+        return measures.stream().allMatch(MeasureGroup::isConvertible);
     }
-
 
     @Override
     public String toString() {
-        return "Expression{" +
-                "k=" + k +
-                ", measures=" + measures +
-                '}';
+        return "Expression " +
+                " k= " + k + " count of measureGroups " + measures.size() +
+                " measures [" + measures.stream().map(MeasureGroup::toString).collect(Collectors.joining()) +
+                ']';
     }
 }

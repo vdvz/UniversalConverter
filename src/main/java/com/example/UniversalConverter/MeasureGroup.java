@@ -9,11 +9,11 @@ public class MeasureGroup{
 
     final private MeasureGraph graph;
 
+    private final LinkedList<Unit> units = new LinkedList<>();
+
     public MeasureGraph getGraph() {
         return graph;
     }
-
-    private final LinkedList<Unit> units = new LinkedList<>();
 
     public MeasureGroup(MeasureGraph graph) {
         this.graph = graph;
@@ -35,8 +35,6 @@ public class MeasureGroup{
     }
 
     public Unit getUnitByName(String unitName){
-        System.out.println("Here111 " + units);
-        units.forEach(e-> System.out.println(e.getName() + " POWER " + e.getPower()));
         Optional<Unit> result = units.stream().filter(e->e.getName().equals(unitName)).findFirst();
         return result.orElse(null);
     }
@@ -52,15 +50,21 @@ public class MeasureGroup{
         units.forEach(e -> e.setPower(e.getPower()*(-1)));
     }
 
-    Unit getNext(){
+    public Unit getNext(){
         return units.remove();
     }
 
+    /*
     public boolean isConvertible(final MeasureGroup toGroup){
         if(toGroup == null) return false;
         long firstDim = this.units.stream().mapToLong(Unit::getPower).sum();
         long secondDim = toGroup.units.stream().mapToLong(Unit::getPower).sum();
         return firstDim == secondDim;
+    }
+    */
+
+    public boolean isConvertible(){
+        return this.units.stream().mapToLong(Unit::getPower).sum() == 0;
     }
 
     @Override
@@ -87,11 +91,12 @@ public class MeasureGroup{
     @Override
     public String toString() {
         return "MeasureGroup "
-                + "graph = " + graph +
-                " entities: " + units.stream().map(e -> "name: " + e.getName() + ", ").collect(Collectors.joining()) + " ]";
+                + "graph = " + graph.hashCode() +
+                " entities: [ " + units.stream().map(e -> "name: " + e.getName() + " power " + e.getPower() + ", ").collect(Collectors.joining()) + " ]";
     }
 
     public void addUnit(Unit from) {
         addUnit(from, from.getPower());
+        System.out.println(toString());
     }
 }

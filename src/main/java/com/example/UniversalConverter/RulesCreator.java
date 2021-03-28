@@ -1,6 +1,7 @@
 package com.example.UniversalConverter;
 
 import com.opencsv.exceptions.CsvValidationException;
+import org.springframework.context.annotation.Bean;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -20,10 +21,10 @@ public class RulesCreator {
                 String firstNodeName = lines[0];
                 String secondNodeName =  lines[1];
                 BigDecimal rate = new BigDecimal(lines[2]);
+                if(rate.compareTo(BigDecimal.ZERO) == 0) continue;
                 MeasureGraph existingGraph;
+                MeasureGraph attachableGraph;
                 if ((existingGraph = knownUnits.get(secondNodeName)) != null) {
-
-                    MeasureGraph attachableGraph;
                     if ((attachableGraph = knownUnits.get(firstNodeName)) != null) {
                         Node firstNode = attachableGraph.getNodeByName(firstNodeName);
                         Node secondNode = existingGraph.findNode(secondNodeName);
@@ -39,8 +40,6 @@ public class RulesCreator {
                         knownUnits.put(firstNodeName, existingGraph);
                     }
                 } else if ((existingGraph = knownUnits.get(firstNodeName)) != null) {
-
-                    MeasureGraph attachableGraph;
                     if ((attachableGraph = knownUnits.get(secondNodeName)) != null) {
                         Node firstNode = attachableGraph.getNodeByName(secondNodeName);
                         Node secondNode = existingGraph.findNode(firstNodeName);

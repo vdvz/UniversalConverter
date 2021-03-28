@@ -50,7 +50,7 @@ public class MeasureGraph {
 
     @Override
     public String toString() {
-        return "MeasureGraph" + hashCode() + "\n";
+        return "MeasureGraph " + hashCode() + "\n";
     }
 
 }
