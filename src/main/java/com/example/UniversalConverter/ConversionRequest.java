@@ -1,9 +1,9 @@
 package com.example.UniversalConverter;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ConversionRequest {
+
     @JsonProperty("from")
     private String from;
 

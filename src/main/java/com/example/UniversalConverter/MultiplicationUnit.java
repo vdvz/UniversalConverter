@@ -1,19 +1,18 @@
 package com.example.UniversalConverter;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
 public class MultiplicationUnit {
 
     private Node node;
     private BigDecimal K;
 
-    public MultiplicationUnit(Node _node, BigDecimal k){
+    public MultiplicationUnit(Node _node, BigDecimal k) {
         node = _node;
         K = k;
     }
 
-    public MultiplicationUnit(Node _node){
+    public MultiplicationUnit(Node _node) {
         node = _node;
         K = BigDecimal.ONE;
     }

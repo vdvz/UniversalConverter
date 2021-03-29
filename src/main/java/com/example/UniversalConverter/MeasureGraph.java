@@ -1,17 +1,14 @@
 package com.example.UniversalConverter;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 public class MeasureGraph {
 
     private final Set<Node> nodes;
     private final Node rootNode;
-
-    private MeasureGraph(){
-        rootNode = null;
-        nodes = null;
-    }
 
     public MeasureGraph(Node rootNode) {
         nodes = new HashSet<>();
@@ -19,8 +16,9 @@ public class MeasureGraph {
         nodes.add(rootNode);
     }
 
-    Node findNode(String unitName){
-        Optional<Node> result = nodes.stream().filter(e -> e.getUnitName().equals(unitName)).findFirst();
+    Node findNode(String unitName) {
+        Optional<Node> result = nodes.stream().filter(e -> e.getUnitName().equals(unitName))
+                .findFirst();
         return result.orElse(null);
     }
 
@@ -30,22 +28,18 @@ public class MeasureGraph {
         fromNode.addEdge(toNode, rate);
     }
 
-    public boolean isRootNode(Node node){
+    public boolean isRootNode(Node node) {
         return node.equals(rootNode);
     }
 
-    public void bindGraph(Node fromNode, Node toNode, BigDecimal rate, MeasureGraph newGraph){
+    public void bindGraph(Node fromNode, Node toNode, BigDecimal rate, MeasureGraph newGraph) {
         nodes.addAll(newGraph.nodes);
-        nodes.forEach(e-> System.out.println(e.getUnitName()));
+        nodes.forEach(e -> System.out.println(e.getUnitName()));
         fromNode.addEdge(toNode, rate);
     }
 
-    public Set<Node> getNodes() {
-        return nodes;
-    }
-
     public Node getNodeByName(String name) {
-        return nodes.stream().filter(e->e.getUnitName().equals(name)).findFirst().orElse(null);
+        return nodes.stream().filter(e -> e.getUnitName().equals(name)).findFirst().orElse(null);
     }
 
     @Override

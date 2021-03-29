@@ -3,12 +3,11 @@ package com.example.UniversalConverter;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
-import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class ConversionRulesReader implements Closeable, AutoCloseable {
+public class ConversionRulesReader implements ResourceReader_I {
 
     private final CSVReader reader;
     private final FileReader fr;
@@ -18,6 +17,7 @@ public class ConversionRulesReader implements Closeable, AutoCloseable {
         reader = new CSVReader(fr);
     }
 
+    @Override
     public String[] getNextValues() throws IOException, CsvValidationException {
         return reader.readNext();
     }

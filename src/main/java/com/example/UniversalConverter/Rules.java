@@ -1,7 +1,6 @@
 package com.example.UniversalConverter;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -10,23 +9,20 @@ public class Rules {
     private final Map<String, MeasureGraph> KnownUnits;
 
     public Collection<MeasureGraph> getKnownUnits() {
-        return  KnownUnits.values();
-    }
-
-    private Rules() {
-        KnownUnits = new HashMap<>();
+        return KnownUnits.values();
     }
 
     public Rules(Map<String, MeasureGraph> _knownUnits) {
         KnownUnits = _knownUnits;
     }
 
-    public MeasureGraph getGraph(String measureName){
+    public MeasureGraph getGraph(String measureName) {
         return KnownUnits.get(measureName);
     }
 
     @Override
     public String toString() {
-        return "Rules [" + KnownUnits.keySet().stream().map(e-> e + KnownUnits.get(e).toString()).collect(Collectors.joining()) + ']';
+        return "Rules [" + KnownUnits.keySet().stream().map(e -> e + KnownUnits.get(e).toString())
+                .collect(Collectors.joining()) + ']';
     }
 }

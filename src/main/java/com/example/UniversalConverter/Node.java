@@ -19,7 +19,9 @@ public class Node {
     public void addEdge(Node node, BigDecimal rate) {
         neighbours.put(node, rate);
         System.out.println("Hash is:" + hashCode() + "Name :" + unitName);
-        System.out.println("Put from " + unitName + " to node name " + node.unitName + " neighbours" + neighbours.toString());
+        System.out.println(
+                "Put from " + unitName + " to node name " + node.unitName + " neighbours" + neighbours
+                        .toString());
     }
 
     public Map<Node, BigDecimal> getNeighbors() {

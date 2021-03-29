@@ -1,7 +1,6 @@
 package com.example.UniversalConverter;
 
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
-import org.apache.commons.collections4.ArrayStack;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -9,32 +8,33 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Этот класс описывает выражение K*[1st group of measure]*[2nd group of measure]..[n-th group of measure]
+ * Этот класс описывает выражение K*[1st group of measure]*[2nd group of measure]..[n-th group of
+ * measure]
  */
 public class Expression {
 
     private BigDecimal k = BigDecimal.ONE;
     final private List<MeasureGroup> measures;
 
-    Expression(List<MeasureGroup> measureGroups){
+    Expression(List<MeasureGroup> measureGroups) {
         measures = measureGroups;
     }
 
-    public Expression invert(){
+    public Expression invert() {
         measures.forEach(MeasureGroup::invert);
         return this;
     }
 
-    public Expression multiply(Expression e)  {
+    public Expression multiply(Expression e) {
         List<MeasureGroup> measureGroups = new ArrayList<>(measures);
-        for (MeasureGroup gr: e.getMeasures()) {
+        for (MeasureGroup gr : e.getMeasures()) {
             int index = measureGroups.indexOf(gr);
-            if(index != -1) {
+            if (index != -1) {
                 try {
                     measureGroups.add(gr.multiply(measures.remove(index)));
                 } catch (IncorrectDimensionException ignored) {
                 }
-            }else{
+            } else {
                 measureGroups.add(gr);
             }
         }
@@ -53,7 +53,7 @@ public class Expression {
         this.k = k;
     }
 
-    public boolean isConversionAvailable(){
+    public boolean isConversionAvailable() {
         return measures.stream().allMatch(MeasureGroup::isConvertible);
     }
 
@@ -61,7 +61,8 @@ public class Expression {
     public String toString() {
         return "Expression " +
                 " k= " + k + " count of measureGroups " + measures.size() +
-                " measures [" + measures.stream().map(MeasureGroup::toString).collect(Collectors.joining()) +
+                " measures [" + measures.stream().map(MeasureGroup::toString).collect(Collectors.joining())
+                +
                 ']';
     }
 }
