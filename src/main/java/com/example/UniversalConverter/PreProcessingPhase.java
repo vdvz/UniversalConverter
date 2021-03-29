@@ -4,9 +4,9 @@ import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 
 public class PreProcessingPhase {
 
-    public static void checkDimension(final Expression expression)
+    public static void checkDimension(final Expression from, final Expression to)
             throws IncorrectDimensionException {
-        if (!expression.isConversionAvailable()) {
+        if (!from.isConversionAvailable(to)) {
             throw new IncorrectDimensionException();
         }
     }
@@ -17,9 +17,8 @@ public class PreProcessingPhase {
 
     public static Expression preprocessing(Expression fromExpression, Expression toExpression)
             throws IncorrectDimensionException {
-        Expression expression = combine(fromExpression, toExpression);
-        checkDimension(expression);
-        return expression;
+        checkDimension(fromExpression, toExpression);
+        return null;
     }
 
 }

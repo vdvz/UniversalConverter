@@ -6,6 +6,9 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Описывает узел графа.
+ */
 public class Node {
 
     private final String unitName;
@@ -16,18 +19,25 @@ public class Node {
         this.unitName = unitName;
     }
 
+    /**
+     * @param node Вершина-сосед
+     * @param rate Коэффициент преобразования
+     */
     public void addEdge(Node node, BigDecimal rate) {
         neighbours.put(node, rate);
-        System.out.println("Hash is:" + hashCode() + "Name :" + unitName);
-        System.out.println(
-                "Put from " + unitName + " to node name " + node.unitName + " neighbours" + neighbours
-                        .toString());
     }
 
+    /**
+     * @return Возвращает Map<Node, BigDecimal>, где Node - вершина-сосед,
+     * BigDecimal - коэффициент преобразования к соседу
+     */
     public Map<Node, BigDecimal> getNeighbors() {
         return new HashedMap<>(neighbours);
     }
 
+    /**
+     * @return Имя вершины
+     */
     public String getUnitName() {
         return unitName;
     }

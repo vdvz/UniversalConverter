@@ -1,5 +1,6 @@
 package com.example.UniversalConverter;
 
+import com.example.UniversalConverter.Exceptions.NoAvailableRulesException;
 import com.opencsv.exceptions.CsvValidationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,21 +16,17 @@ public class RulesManager {
 
     private static final Logger logger = LogManager.getLogger(RulesManager.class);
 
-    static private String pathToResourceWithRules;
     private static Rules rules;
 
-    public static void setPathToResourceWithRules(String pathToResourceWithRules) {
-        RulesManager.pathToResourceWithRules = pathToResourceWithRules;
-    }
-
-    public static Rules getRules() throws IOException {
+    public static Rules getRules() throws NoAvailableRulesException {
         if (rules != null) {
             return rules;
         }
-        return createRules();
+        throw new NoAvailableRulesException();
     }
 
-    public static Rules createRules() throws IOException {
+
+    public static Rules createRules(String pathToResourceWithRules) throws IOException {
         if (pathToResourceWithRules == null) {
             throw new NoSuchFileException("Путь до ресурса с правилами не задан");
         }
@@ -43,9 +40,10 @@ public class RulesManager {
                 String firstNodeName = values[0];
                 String secondNodeName = values[1];
                 BigDecimal rate = new BigDecimal(values[2]);
-                if (rate.compareTo(BigDecimal.ZERO) <= 0) {
+                if (rate.compareTo(BigDecimal.ZERO) == 0) {
                     logger.info(
-                            "Коэффициент преобразования меньше либо равен 0. Такое правило не будет учтено.");
+                            "Коэффициент преобразования из \"" + firstNodeName + "\" в \""
+                                + secondNodeName + "\" равен 0. Такое правило не будет учтено.");
                     continue;
                 }
 
@@ -68,6 +66,7 @@ public class RulesManager {
             e.printStackTrace();
         }
         rules = new Rules(knownUnits);
+        logger.info("Новые правила созданы");
         return rules;
     }
 

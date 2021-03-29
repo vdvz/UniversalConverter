@@ -1,12 +1,15 @@
 import com.example.UniversalConverter.*;
+import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
 import com.example.UniversalConverter.Exceptions.UnknownNameOfUnitException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
@@ -21,17 +24,20 @@ public class RulesTests {
     static String rulePath = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
 
     static ConversionRequestParser parser = new ConversionRequestParser();
-    PreProcessingPhase preProcessingPhase = new PreProcessingPhase();
-    ExpressionConverter converter = new ExpressionConverter();
+    ExpressionConverter converter;
 
     @BeforeAll
-    public static void initForTest(){
+    public static void initRules(){
         try {
-            RulesManager.setPathToResourceWithRules(rulePath);
-            rules = RulesManager.createRules();
+            rules = RulesManager.createRules(rulePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @BeforeEach
+    public void initConverter(){
+        converter = new ExpressionConverter();
     }
 
     @Test
@@ -49,6 +55,17 @@ public class RulesTests {
     public void testMeasureGroup(){
     }
 
+
+    private BigDecimal algorithm(String fromStr, String toStr)
+        throws InvalidStringForParsing, UnknownNameOfUnitException, IncorrectDimensionException {
+
+        Expression from = parser.parseStringToExpression(fromStr, rules);
+        Expression to = parser.parseStringToExpression(toStr, rules);
+
+        PreProcessingPhase.preprocessing(from, to);
+
+        return converter.convert(from, to);
+    }
 
     static class TestRequest{
         final ConversionRequest request;
@@ -68,49 +85,65 @@ public class RulesTests {
                 new TestRequest(mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"1/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"мин\"}", ConversionRequest.class), new BigDecimal("60").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/мм\", \"to\" : \"м*см\"}", ConversionRequest.class), new BigDecimal("100000000000000").setScale(15))
+                new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"д\"}", ConversionRequest.class), new BigDecimal("60").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/мм\", \"to\" : \"м*см\"}", ConversionRequest.class), new BigDecimal("100000000000000").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.000000000000001").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"г\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"1/г\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15))
+
         );
     }
 
-    public static Stream<ConversionRequest> sourcesForIncorrectTests(){
+    public static Stream<ConversionRequest> sourcesForIncorrectDimensionTests()
+        throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return Stream.of(
-
+            mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"м\"}", ConversionRequest.class),
+            mapper.readValue("{\"from\" : \"км*км\", \"to\" : \"м\"}", ConversionRequest.class),
+            mapper.readValue("{\"from\" : \"км\", \"to\" : \"м*м\"}", ConversionRequest.class),
+            mapper.readValue("{\"from\" : \"км*ч/с\", \"to\" : \"м*ч*с/с\"}", ConversionRequest.class)
         );
     }
 
+    private static Stream<ConversionRequest> sourcesForIncorrectNameOfUnitTests()
+        throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return Stream.of(
+            mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"sadas dsadsa * dsfds\"}", ConversionRequest.class),
+            mapper.readValue("{\"from\" : \"asdfsa\", \"to\" : \"м\"}", ConversionRequest.class),
+            mapper.readValue("{\"from\" : \"1/sadsads\", \"to\" : \"\"}", ConversionRequest.class),
+            mapper.readValue("{\"from\" : \"км*ч/сcccc\", \"to\" : \"сcccc/1\"}", ConversionRequest.class)
+        );
+    }
 
-    @ParameterizedTest(name = "simple tests with right answer")
+    @DisplayName("simple tests with right answer")
+    @ParameterizedTest
     @MethodSource("sourcesForCorrectTests")
     public void simpleRightTests(TestRequest testRequest){
         ConversionRequest request = testRequest.request;
         BigDecimal answer = testRequest.answer;
-        Expression from = null;
-        Expression to = null;
-        try {
-            from = parser.parseStringToExpression(request.getFrom(), rules);
-            to = parser.parseStringToExpression(request.getTo(), rules);
-        } catch (InvalidStringForParsing | UnknownNameOfUnitException invalidStringForParsing) {
-            invalidStringForParsing.printStackTrace();
-        }
 
-        Expression finalEx = null;
-        assert from != null;
-        assert to != null;
-        finalEx = PreProcessingPhase.combine(from, to);
+        var ref = new Object() {
+            BigDecimal currentAnswer;
+        };
 
-        assert finalEx != null;
-        if(finalEx.isConversionAvailable()){
-            converter.convert(finalEx);
-        }
-
-        assertEquals(answer, finalEx.getK());
+        assertDoesNotThrow(() -> ref.currentAnswer = algorithm(request.getFrom(), request.getTo()));
+        assertEquals(answer, ref.currentAnswer);
     }
 
-
-    @ParameterizedTest(name = "simple tests with exception")
-    @MethodSource("sourcesForIncorrectTests")
-    public void simpleTestsWithExceptions(){
+    @DisplayName("simple tests with thrown IncorrectDimensionException")
+    @ParameterizedTest
+    @MethodSource("sourcesForIncorrectDimensionTests")
+    public void testWithIncorrectDimension(ConversionRequest request){
+        assertThrows(IncorrectDimensionException.class, () -> algorithm(request.getFrom(), request.getTo()));
     }
+
+    @DisplayName("simple tests with thrown UnknownNameOfUnitException")
+    @ParameterizedTest
+    @MethodSource("sourcesForIncorrectNameOfUnitTests")
+    public void testWithIncorrectNameOfUnit(ConversionRequest request){
+        assertThrows(UnknownNameOfUnitException.class, () -> algorithm(request.getFrom(), request.getTo()));
+    }
+
 
 }

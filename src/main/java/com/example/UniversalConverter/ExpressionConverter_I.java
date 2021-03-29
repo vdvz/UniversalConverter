@@ -1,6 +1,9 @@
 package com.example.UniversalConverter;
 
+import java.math.BigDecimal;
+
 interface ExpressionConverter_I {
 
-    void convert(Expression e);
+  BigDecimal convert(Expression from, Expression to);
+
 }

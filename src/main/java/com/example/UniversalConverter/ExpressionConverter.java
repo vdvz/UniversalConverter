@@ -1,5 +1,6 @@
 package com.example.UniversalConverter;
 
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,8 +11,39 @@ import java.util.Objects;
 import java.util.Queue;
 
 
+/**
+ * Выполняет преобразование Expression'a с накоплением коэффициента K выражения.
+ * Использует алгоритм обхода графа в ширину.
+ */
 public class ExpressionConverter implements ExpressionConverter_I {
 
+
+
+    class PowK{
+        public void invert(){
+
+        }
+
+        private BigDecimal numerator = BigDecimal.ONE;
+
+        private BigDecimal divisor = BigDecimal.ONE;
+
+        public BigDecimal getNumerator() {
+            return numerator;
+        }
+
+        public void setNumerator(BigDecimal numerator) {
+            this.numerator = numerator;
+        }
+
+        public BigDecimal getDivisor() {
+            return divisor;
+        }
+
+        public void setDivisor(BigDecimal divisor) {
+            this.divisor = divisor;
+        }
+    }
 
     private static final Logger logger = LogManager.getLogger(ExpressionConverter.class);
     private final RoundingMode roundPolitic;
@@ -30,27 +62,37 @@ public class ExpressionConverter implements ExpressionConverter_I {
     }
 
     @Override
-    public void convert(Expression expression) {
-        for (MeasureGroup group : expression.getMeasures()) {
-            logger.debug("Start converting group " + group.toString());
-            convertGroup(group);
+    public BigDecimal convert(Expression from, Expression to) {
+
+        List<MeasureGroup> toMeasureGroups = to.getMeasures();
+        for (MeasureGroup fromGroup : from.getMeasures()) {
+            MeasureGroup toGroup = toMeasureGroups.get(toMeasureGroups.indexOf(fromGroup));
+            logger.debug("Start converting group " + fromGroup.toString() + " to group " + toGroup.toString());
+            convertGroup(fromGroup, toGroup);
         }
-        expression.setK(numeratorK.divide(divisorK, maxScale, roundPolitic));
+        logger.debug("Текущий числитель: " + numeratorK);
+        logger.debug("Текущий знаменатель: " + divisorK);
+        return numeratorK.divide(divisorK, maxScale, roundPolitic);
     }
 
-    private void convertGroup(MeasureGroup currentGroup) {
-        MeasureGraph conversionGraph = currentGroup.getGraph();
+    private void convertGroup(MeasureGroup fromGroup, MeasureGroup toGroup) {
+        BigDecimal localNumeratorK = BigDecimal.ONE;
+        BigDecimal localDivisorK = BigDecimal.ONE;
 
-        while (!currentGroup.isEmpty()) {
+        MeasureGraph conversionGraph = fromGroup.getGraph();
+        int k = 0;
+        while (!fromGroup.isEmpty()) {
+            if(k>6) break;
+            k++;
             Queue<MultiplicationUnit> neighbors = new LinkedList<>();
-            Unit fromUnit = currentGroup.getNext();
+            Unit fromUnit = fromGroup.getNext();
 
             logger.debug("Получили Unit из группы: " + fromUnit.getName());
             Node fromNode = conversionGraph.findNode(fromUnit.getName());
 
             if (conversionGraph.isRootNode(fromNode)) {
                 logger.debug("Текущая вершина корневая");
-                currentGroup.addUnit(fromUnit);
+                fromGroup.addUnit(fromUnit);
                 continue;
             }
 
@@ -66,35 +108,18 @@ public class ExpressionConverter implements ExpressionConverter_I {
                 logger.debug("Сосед: " + currentNode.getUnitName());
 
                 /* Проверяем есть ли в группе элемент с таким же названием как у текущей ноды */
-                Unit toUnit = currentGroup.getUnitByName(currentNode.getUnitName());
-                if (!Objects.equals(toUnit, null)) {
-                    /* Можно выполнить преобразование */
-                    int fromPower = fromUnit.getPower();
-                    int toPower = toUnit.getPower();
+                Unit toUnit = toGroup.getUnitByName(currentNode.getUnitName());
+                int fromPower = fromUnit.getPower();
+                if (!Objects.equals(toUnit, null) && fromPower == toUnit.getPower()){
 
-                    if (fromPower < 0 && toPower > 0) {
-                        /*Если мы преобразуем из */
-                        var sub = divisorK;
-                        divisorK = numeratorK;
-                        numeratorK = sub;
-                        logger.debug("Инвертируем итоговый КФ");
-
-                        numeratorK = numeratorK.multiply(currentK.pow(Math.abs(fromPower)));
-                        logger.debug("Копим числитель " + numeratorK);
-                    }
-                    if (toPower < 0) {
+                    if(fromPower < 0 ){
                         divisorK = divisorK.multiply(currentK.pow(Math.abs(fromPower)));
-                        logger.debug("Копим знаменатель " + divisorK);
                     }
-                    if (fromPower > 0 && toPower > 0) {
+                    if(fromPower > 0) {
                         numeratorK = numeratorK.multiply(currentK.pow(fromPower));
-                        logger.debug("Копим числитель " + numeratorK);
                     }
 
-
-                    /*т.к в группе уже есть элемент toUnit, то степени просто сложатся*/
-                    currentGroup.addUnit(toUnit, fromUnit.getPower());
-
+                    toGroup.addUnit(toUnit, fromPower);
                     break;
                 } else {
                     /*Добавляем всех соседей текущей ноды*/
@@ -103,13 +128,21 @@ public class ExpressionConverter implements ExpressionConverter_I {
                         neighbors.add(new MultiplicationUnit(node, mlUnit.getK().multiply(transitionK)));
                     });
                 }
-
                 if (neighbors.isEmpty() && !currentGroup.isEmpty()) {
-                    logger.debug("Добавляем элемент в конец группы");
-                    currentGroup.addUnit(fromUnit);
-                    logger.debug("Текущий вид группы " + currentGroup.toString());
+                    logger.info("Преобразование в корневую вершину и добавляем ее в группу");
+                    int power = fromUnit.getPower();
+                    if(power < 0){
+                        localDivisorK = localDivisorK.multiply(currentK.pow(Math.abs(power)));
+                        logger.info("Копим знаменатель " + localDivisorK);
+                    }else{
+                        localNumeratorK = localNumeratorK.multiply(currentK.pow(power));
+                        logger.info("Копим числитель " + localNumeratorK);
+                    }
+                    currentGroup.addUnit(new Unit(currentNode.getUnitName(), power));
+                    logger.info("Текущий вид группы " + currentGroup.toString());
                 }
             }
+
         }
     }
 }

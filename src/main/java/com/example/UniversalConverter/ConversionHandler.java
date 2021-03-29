@@ -2,11 +2,10 @@ package com.example.UniversalConverter;
 
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
+import com.example.UniversalConverter.Exceptions.NoAvailableRulesException;
 import com.example.UniversalConverter.Exceptions.UnknownNameOfUnitException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
 
 public class ConversionHandler {
 
@@ -18,10 +17,10 @@ public class ConversionHandler {
 
     {
         try {
-            //"C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules"
-            rules = RulesManager.createRules();
-        } catch (IOException e) {
-            logger.error("Invalid path to a file with rules");
+            rules = RulesManager.getRules();
+        } catch (NoAvailableRulesException e) {
+            logger.error("Не существует созданных правил. Дальнейшая работа сервиса невозможна.");
+            e.printStackTrace();
             System.exit(-1);
         }
     }
@@ -31,11 +30,9 @@ public class ConversionHandler {
         Expression from = parser.parseStringToExpression(request.getFrom(), rules);
         Expression to = parser.parseStringToExpression(request.getTo(), rules);
 
-        Expression expressionToConvert = PreProcessingPhase.preprocessing(from, to);
+        PreProcessingPhase.preprocessing(from, to);
 
         ExpressionConverter_I converter = new ExpressionConverter();
-        converter.convert(expressionToConvert);
-
-
+        converter.convert(from, to);
     }
 }

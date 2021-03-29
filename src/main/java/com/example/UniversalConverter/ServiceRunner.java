@@ -13,8 +13,6 @@ public class ServiceRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         logger.info("Starting Universal Converter service ...");
-        logger.info("A path to source with rules is: " + args[0]);
-        RulesManager.setPathToResourceWithRules(args[0]);
     }
 
 }

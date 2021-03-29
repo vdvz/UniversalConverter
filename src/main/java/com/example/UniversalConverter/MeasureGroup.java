@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * MeasureGroup содержит Unit'ы относящиеся(Node с таким же именем содержится в графе) к одному графу
+ * MeasureGroup группирует Unit'ы относящиеся(Node с таким же именем содержится в графе) к одному графу
  * Например: {км, м, см} - группа построенная на графе(MeasureGraph) мер длины, где км, м, см - Unit'ы;
  *           {ч, мин} - группа построенная на графе(MeasureGraph) мер времени, где ч, мин - Unit'ы;
  */
@@ -140,4 +140,12 @@ public class MeasureGroup {
                 .collect(Collectors.joining()) + " ]";
     }
 
+  public int size() {
+        return units.size();
+  }
+
+    public boolean isConvertible(final MeasureGroup measureGroup) {
+        if(measureGroup == null) return false;
+        return measureGroup.units.stream().mapToLong(Unit::getPower).sum() == this.units.stream().mapToLong(Unit::getPower).sum();
+    }
 }

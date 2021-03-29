@@ -5,6 +5,12 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * MeasureGraph описывает известные преобразования заданные Rules для одной из мер.
+ * Например: Граф содержащий {км, см, м} описывает известные преобразования для меры длины;
+ *           Граф содержащий {день, декада, год} описывает известные преобразования для меры времени;
+ *           Где день, декада, год, км, см, м - Node'ы с соответсвующими названиями.
+ */
 public class MeasureGraph {
 
     private final Set<Node> nodes;
@@ -34,7 +40,6 @@ public class MeasureGraph {
 
     public void bindGraph(Node fromNode, Node toNode, BigDecimal rate, MeasureGraph newGraph) {
         nodes.addAll(newGraph.nodes);
-        nodes.forEach(e -> System.out.println(e.getUnitName()));
         fromNode.addEdge(toNode, rate);
     }
 
