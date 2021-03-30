@@ -25,7 +25,6 @@ public class RulesManager {
         throw new NoAvailableRulesException();
     }
 
-
     public static Rules createRules(String pathToResourceWithRules) throws IOException {
         if (pathToResourceWithRules == null) {
             throw new NoSuchFileException("Путь до ресурса с правилами не задан");
@@ -98,7 +97,8 @@ public class RulesManager {
         } catch (CsvValidationException e) {
             e.printStackTrace();
         }
-        rules = new Rules(knownUnits);
+
+       rules = new Rules(knownUnits);
         logger.info("Новые правила созданы");
         return rules;
     }

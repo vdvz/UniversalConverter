@@ -8,10 +8,6 @@ public class Rules {
 
     private final Map<String, MeasureGraph> KnownUnits;
 
-    public Collection<MeasureGraph> getKnownUnits() {
-        return KnownUnits.values();
-    }
-
     public Rules(Map<String, MeasureGraph> _knownUnits) {
         KnownUnits = _knownUnits;
     }

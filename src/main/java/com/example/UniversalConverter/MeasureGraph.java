@@ -18,14 +18,11 @@ public class MeasureGraph {
 
     private static final Logger logger = LogManager.getLogger(MeasureGraph.class);
 
-
     private final Set<Node> nodes;
-    private final Node rootNode;
 
-    public MeasureGraph(Node rootNode) {
+    public MeasureGraph(Node node) {
         nodes = new HashSet<>();
-        this.rootNode = rootNode;
-        nodes.add(rootNode);
+        nodes.add(node);
     }
 
     Node findNode(String unitName) {
@@ -41,10 +38,6 @@ public class MeasureGraph {
 
         fromNode.addEdge(toNode, new ConversionRate(rate, BigDecimal.ONE));
         toNode.addEdge(fromNode, new ConversionRate(BigDecimal.ONE, rate));
-    }
-
-    public boolean isRootNode(Node node) {
-        return node.equals(rootNode);
     }
 
     public void bindGraph(Node fromNode, Node toNode, BigDecimal rate, MeasureGraph newGraph) {

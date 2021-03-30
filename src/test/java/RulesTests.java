@@ -9,11 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,23 +47,40 @@ public class RulesTests {
 
         MeasureGraph lengthMeasuresGraph = rules.getGraph("км");
 
-        var neighbors = lengthMeasuresGraph.getNodeByName("км").getNeighbors();
+        class FinalNeighbors {
+            Map<Node, ConversionRate> finalNeighbors;
 
-        /*TODO TAKE BY NAME BUT NOT CREATING NODE*/
+            public Map<Node, ConversionRate> getFinalNeighbors() {
+                return finalNeighbors;
+            }
 
-        assertEquals(neighbors.size(), 1);
-        assertEquals(neighbors.get(new Node("м")), new ConversionRate(new BigDecimal("1000"), BigDecimal.ONE));
-        neighbors = lengthMeasuresGraph.getNodeByName("м").getNeighbors();
-        assertEquals(neighbors.size(), 2);
-        assertEquals(neighbors.get(new Node("км")), new ConversionRate(new BigDecimal("1000"), BigDecimal.ONE).invert());
-        assertEquals(neighbors.get(new Node("см")), new ConversionRate(new BigDecimal("100"), BigDecimal.ONE));
-        neighbors = lengthMeasuresGraph.getNodeByName("см").getNeighbors();
-        assertEquals(neighbors.size(), 2);
-        assertEquals(neighbors.get(new Node("м")), new ConversionRate(new BigDecimal("100"), BigDecimal.ONE).invert());
-        assertEquals(neighbors.get(new Node("мм")), new ConversionRate(new BigDecimal("10"), BigDecimal.ONE));
-        neighbors = lengthMeasuresGraph.getNodeByName("мм").getNeighbors();
-        assertEquals(neighbors.size(), 1);
-        assertEquals(neighbors.get(new Node("см")), new ConversionRate(new BigDecimal("10"), BigDecimal.ONE).invert());
+            public void setFinalNeighbors(Map<Node, ConversionRate> finalNeighbors) {
+                this.finalNeighbors = finalNeighbors;
+            }
+        }
+
+        FinalNeighbors effectivelyFinalNeighbors = new FinalNeighbors();
+
+        effectivelyFinalNeighbors.setFinalNeighbors(lengthMeasuresGraph.getNodeByName("км").getNeighbors());
+        Function<String, ConversionRate> getConversionRateToNeighborNamed = (name) -> effectivelyFinalNeighbors.getFinalNeighbors().entrySet().stream().filter((entry) -> entry.getKey().getUnitName().equals(name)).map(Map.Entry::getValue).findFirst().orElse(null);
+
+        assertEquals(effectivelyFinalNeighbors.getFinalNeighbors().size(), 1);
+        assertEquals(getConversionRateToNeighborNamed.apply("м"), new ConversionRate(new BigDecimal("1000"), BigDecimal.ONE));
+
+        effectivelyFinalNeighbors.setFinalNeighbors(lengthMeasuresGraph.getNodeByName("м").getNeighbors());
+        assertEquals(effectivelyFinalNeighbors.getFinalNeighbors().size(), 2);
+        assertEquals(getConversionRateToNeighborNamed.apply("км"), new ConversionRate(new BigDecimal("1000"), BigDecimal.ONE).invert());
+        assertEquals(getConversionRateToNeighborNamed.apply("см"), new ConversionRate(new BigDecimal("100"), BigDecimal.ONE));
+
+        effectivelyFinalNeighbors.setFinalNeighbors(lengthMeasuresGraph.getNodeByName("см").getNeighbors());
+        assertEquals(effectivelyFinalNeighbors.getFinalNeighbors().size(), 2);
+        assertEquals(getConversionRateToNeighborNamed.apply("м"), new ConversionRate(new BigDecimal("100"), BigDecimal.ONE).invert());
+        assertEquals(getConversionRateToNeighborNamed.apply("мм"), new ConversionRate(new BigDecimal("10"), BigDecimal.ONE));
+
+        effectivelyFinalNeighbors.setFinalNeighbors(lengthMeasuresGraph.getNodeByName("мм").getNeighbors());
+        assertEquals(effectivelyFinalNeighbors.getFinalNeighbors().size(), 1);
+        assertEquals(getConversionRateToNeighborNamed.apply("см"), new ConversionRate(new BigDecimal("10"), BigDecimal.ONE).invert());
+
 
     }
 
@@ -130,14 +148,9 @@ public class RulesTests {
     }
 
     @Test
-    public void checkDimension(){
-    }
-
-    @Test
     @DisplayName("test for measure group")
     public void testMeasureGroup(){
     }
-
 
     private BigDecimal algorithm(String fromStr, String toStr)
         throws InvalidStringForParsing, UnknownNameOfUnitException, IncorrectDimensionException {
@@ -173,7 +186,8 @@ public class RulesTests {
                 new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/м\", \"to\" : \"мм*см\"}", ConversionRequest.class), new BigDecimal("100000000000000").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"гр\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15))
+                new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"кг/гр\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15))
 
         );
     }

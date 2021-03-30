@@ -11,10 +11,6 @@ public class PreProcessingPhase {
         }
     }
 
-    public static Expression combine(Expression firstExpression, Expression secondExpression) {
-        return secondExpression.multiply(firstExpression.invert());
-    }
-
     public static Expression preprocessing(Expression fromExpression, Expression toExpression)
             throws IncorrectDimensionException {
         checkDimension(fromExpression, toExpression);

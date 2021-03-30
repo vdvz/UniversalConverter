@@ -19,8 +19,7 @@ public class ConversionHandler {
         try {
             rules = RulesManager.getRules();
         } catch (NoAvailableRulesException e) {
-            logger.error("Не существует созданных правил. Дальнейшая работа сервиса невозможна.");
-            e.printStackTrace();
+            logger.error("Не существует созданных правил. Дальнейшая работа сервиса невозможна.", e);
             System.exit(-1);
         }
     }

@@ -28,15 +28,6 @@ public class MeasureGroup implements Iterator<Unit>{
     }
 
     /**
-     * Добавляет новый unit в group'у
-     *
-     * @param unit добавляемый unit
-     */
-    public void addUnit(Unit unit) {
-        addUnit(unit, unit.getPower());
-    }
-
-    /**
      * Добавление нового Unit'а в группу. Если в группе существует такой Unit, то их степени
      * складываются.
      *
@@ -63,36 +54,30 @@ public class MeasureGroup implements Iterator<Unit>{
         return result.orElse(null);
     }
 
-    /**
-     * Возвращает группу которая является произведением this и group.
-     *
-     * @param group - перемножаемая группа
-     * @return group - явялющаяся произведением this на group
-     * @throws IncorrectDimensionException - если !this.equals(group)
-     */
-    public MeasureGroup multiply(MeasureGroup group) throws IncorrectDimensionException {
-        if (this.equals(group)) {
-            units.forEach(e -> group.addUnit(e, e.getPower()));
-            return group;
-        } else {
-            throw new IncorrectDimensionException();
-        }
+    public boolean isEmpty() {
+        return units.isEmpty();
+    }
+
+    public int size() {
+        return units.size();
+    }
+
+    public int power(){
+        return units.stream().mapToInt(Unit::getPower).sum();
+    }
+
+    public boolean isConvertible(final MeasureGroup measureGroup) {
+        if(measureGroup == null) return false;
+        return this.power() == measureGroup.power();
     }
 
     /**
-     * Инвертирует группу, т.е a, b - unit'ы в текущей group'e, a -> b = a^(-1).
-     */
-    public void invert() {
-        units.forEach(e -> e.setPower(e.getPower() * (-1)));
-    }
-
-    /**
-     * Проверяет возможно ли выполнить преобразования в Group'е
+     * Получает из Group'ы следующий Unit
      *
-     * @return true если преобразование возможно, false инчае
+     * @return возвращаемый Unit
      */
-    public boolean isConvertible() {
-        return this.units.stream().mapToLong(Unit::getPower).sum() == 0;
+    public Unit getNext() {
+        return units.remove();
     }
 
     /**
@@ -119,10 +104,6 @@ public class MeasureGroup implements Iterator<Unit>{
         return Objects.hash(graph);
     }
 
-    public boolean isEmpty() {
-        return units.isEmpty();
-    }
-
     @Override
     public String toString() {
         return "MeasureGroup "
@@ -130,20 +111,6 @@ public class MeasureGroup implements Iterator<Unit>{
                 " entities: [ " + units.stream()
                 .map(e -> "name: " + e.getName() + " power " + e.getPower() + ", ")
                 .collect(Collectors.joining()) + " ]";
-    }
-
-    public int size() {
-        return units.size();
-    }
-
-
-    public int power(){
-        return units.stream().mapToInt(Unit::getPower).sum();
-    }
-
-    public boolean isConvertible(final MeasureGroup measureGroup) {
-        if(measureGroup == null) return false;
-        return this.power() == measureGroup.power();
     }
 
     @Override
@@ -156,12 +123,4 @@ public class MeasureGroup implements Iterator<Unit>{
         return units.iterator().next();
     }
 
-    /**
-     * Получает из Group'ы следующий Unit
-     *
-     * @return возвращаемый Unit
-     */
-    public Unit getNext() {
-        return units.remove();
-    }
 }

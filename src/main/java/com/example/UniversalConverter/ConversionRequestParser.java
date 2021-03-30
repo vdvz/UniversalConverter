@@ -37,6 +37,9 @@ public class ConversionRequestParser {
 
         for (Unit unit : expressionUnits) {
             //Check if unit exists and if so then get graphForCurrentUnit
+            if(unit.getName().equals("")){
+                continue;
+            }
             MeasureGraph graphForCurrentUnit = rules.getGraph(unit.getName());
             if (graphForCurrentUnit == null) {
                 throw new UnknownNameOfUnitException();

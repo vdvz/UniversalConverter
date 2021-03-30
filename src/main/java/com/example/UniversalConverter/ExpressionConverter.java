@@ -24,7 +24,7 @@ public class ExpressionConverter implements ExpressionConverter_I {
     private final int maxScale;
 
     public ExpressionConverter() {
-        maxScale = 15;
+        maxScale = 40;
         roundPolitic = RoundingMode.HALF_DOWN;
     }
 
@@ -39,11 +39,11 @@ public class ExpressionConverter implements ExpressionConverter_I {
         List<MeasureGroup> toMeasureGroups = to.getMeasures();
         for (MeasureGroup fromGroup : from.getMeasures()) {
             MeasureGroup toGroup = toMeasureGroups.get(toMeasureGroups.indexOf(fromGroup));
-            Unit toCon = new Unit(fromGroup.next().getName());
-            ConversionRate fromReductionRate = reductionGroup(fromGroup, toCon);
+            Unit unitToReduce = new Unit(fromGroup.next().getName());
+            logger.info("Сокращаем величины");
+            ConversionRate fromReductionRate = reductionGroup(fromGroup, unitToReduce);
 
-
-            ConversionRate toReductionRate = reductionGroup(toGroup, toCon);
+            ConversionRate toReductionRate = reductionGroup(toGroup, unitToReduce);
 
             logger.debug("Редукшн фром " + fromReductionRate);
             logger.debug("Редукшн ту " + toReductionRate);
@@ -51,7 +51,7 @@ public class ExpressionConverter implements ExpressionConverter_I {
             conversionRate = conversionRate.multiply(fromReductionRate).multiply(toReductionRate.invert());
 
             logger.debug("Итоговый кф преобразования " + conversionRate);
-            logger.debug("Переходим к преобразованию величин");
+            logger.debug("Преобразовываем величины");
             ConversionRate conversionRateForGroup = convertGroup(fromGroup, toGroup);
 
             conversionRate.multiply(conversionRateForGroup);
@@ -59,7 +59,6 @@ public class ExpressionConverter implements ExpressionConverter_I {
 
         return conversionRate.getNumerator().divide(conversionRate.getDivisor(), maxScale, roundPolitic);
     }
-
 
     private ConversionRate reductionGroup(MeasureGroup group, Unit fromUnit){
         ConversionRate conversionRateForGroup = new ConversionRate();
@@ -129,7 +128,6 @@ public class ExpressionConverter implements ExpressionConverter_I {
             Unit fromUnit = fromGroup.getNext();
 
             if (toGroup.getUnitByName(fromUnit.getName())!=null){
-                logger.debug("HEREREREE");
                break;
             }
 
