@@ -44,6 +44,89 @@ public class RulesTests {
     @DisplayName("building graph tests")
     public void graphCreationTest(){
 
+        MeasureGraph lengthMeasuresGraph = rules.getGraph("км");
+
+        var neighbors = lengthMeasuresGraph.getNodeByName("км").getNeighbors();
+
+        /*TODO TAKE BY NAME BUT NOT CREATING NODE*/
+
+        assertEquals(neighbors.size(), 1);
+        assertEquals(neighbors.get(new Node("м")), new ConversionRate(new BigDecimal("1000"), BigDecimal.ONE));
+        neighbors = lengthMeasuresGraph.getNodeByName("м").getNeighbors();
+        assertEquals(neighbors.size(), 2);
+        assertEquals(neighbors.get(new Node("км")), new ConversionRate(new BigDecimal("1000"), BigDecimal.ONE).invert());
+        assertEquals(neighbors.get(new Node("см")), new ConversionRate(new BigDecimal("100"), BigDecimal.ONE));
+        neighbors = lengthMeasuresGraph.getNodeByName("см").getNeighbors();
+        assertEquals(neighbors.size(), 2);
+        assertEquals(neighbors.get(new Node("м")), new ConversionRate(new BigDecimal("100"), BigDecimal.ONE).invert());
+        assertEquals(neighbors.get(new Node("мм")), new ConversionRate(new BigDecimal("10"), BigDecimal.ONE));
+        neighbors = lengthMeasuresGraph.getNodeByName("мм").getNeighbors();
+        assertEquals(neighbors.size(), 1);
+        assertEquals(neighbors.get(new Node("см")), new ConversionRate(new BigDecimal("10"), BigDecimal.ONE).invert());
+
+    }
+
+    @Test
+    @DisplayName("check if parser works correct")
+    public void checkParser() throws InvalidStringForParsing, UnknownNameOfUnitException {
+        String expression1 = "км*см";
+        String expression2 = "км/см";
+        String expression3 = "км*см/мм";
+        String expression4 = "мм/км*см";
+
+        MeasureGraph graph = rules.getGraph("км");
+
+        Expression expression = parser.parseStringToExpression(expression1, rules);
+        assertEquals(expression.getMeasures().size(), 1);
+        var measures = expression.getMeasures();
+        MeasureGroup group = measures.get(measures.indexOf(new MeasureGroup(graph)));
+        Unit unit;
+        unit = group.getUnitByName("км");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), 1);
+        unit = group.getUnitByName("см");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), 1);
+
+        expression = parser.parseStringToExpression(expression2, rules);
+        assertEquals(expression.getMeasures().size(), 1);
+        measures = expression.getMeasures();
+        group = measures.get(measures.indexOf(new MeasureGroup(graph)));
+        unit = group.getUnitByName("км");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), 1);
+        unit = group.getUnitByName("см");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), -1);
+
+        expression = parser.parseStringToExpression(expression3, rules);
+        assertEquals(expression.getMeasures().size(), 1);
+        measures = expression.getMeasures();
+        group = measures.get(measures.indexOf(new MeasureGroup(graph)));
+        unit = group.getUnitByName("км");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), 1);
+        unit = group.getUnitByName("см");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), 1);
+        unit = group.getUnitByName("мм");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), -1);
+
+        expression = parser.parseStringToExpression(expression4, rules);
+        assertEquals(expression.getMeasures().size(), 1);
+        measures = expression.getMeasures();
+        group = measures.get(measures.indexOf(new MeasureGroup(graph)));
+        unit = group.getUnitByName("км");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), -1);
+        unit = group.getUnitByName("см");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), -1);
+        unit = group.getUnitByName("мм");
+        assertNotNull(unit);
+        assertEquals(unit.getPower(), 1);
+
     }
 
     @Test
@@ -62,6 +145,7 @@ public class RulesTests {
         Expression from = parser.parseStringToExpression(fromStr, rules);
         Expression to = parser.parseStringToExpression(toStr, rules);
 
+        System.out.println("TOTOTO: " + to);
         PreProcessingPhase.preprocessing(from, to);
 
         return converter.convert(from, to);
@@ -80,15 +164,15 @@ public class RulesTests {
     public static Stream<TestRequest> sourcesForCorrectTests() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return Stream.of(
-                new TestRequest(mapper.readValue("{\"from\" : \"м/км*км\", \"to\" : \"1/см\"}", ConversionRequest.class), new BigDecimal("0.01").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"км\", \"to\" : \"м\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"1/м\", \"to\" : \"1/км\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"1/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"д\", \"to\" : \"ч\"}", ConversionRequest.class), new BigDecimal("24").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"д\"}", ConversionRequest.class), new BigDecimal("0.041666666666667").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/м\", \"to\" : \"мм*см\"}", ConversionRequest.class), new BigDecimal("100000000000000").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.000000000000001").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"м/км*км\", \"to\" : \"1/см\"}", ConversionRequest.class), new BigDecimal("0.00000001").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/м\", \"to\" : \"мм*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"гр\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15))
 

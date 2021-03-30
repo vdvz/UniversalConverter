@@ -2,6 +2,7 @@ package com.example.UniversalConverter;
 
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Optional;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
  * Например: {км, м, см} - группа построенная на графе(MeasureGraph) мер длины, где км, м, см - Unit'ы;
  *           {ч, мин} - группа построенная на графе(MeasureGraph) мер времени, где ч, мин - Unit'ы;
  */
-public class MeasureGroup {
+public class MeasureGroup implements Iterator<Unit>{
 
     final private MeasureGraph graph;
 
@@ -86,15 +87,6 @@ public class MeasureGroup {
     }
 
     /**
-     * Получает из Group'ы следующий Unit
-     *
-     * @return возвращаемый Unit
-     */
-    public Unit getNext() {
-        return units.remove();
-    }
-
-    /**
      * Проверяет возможно ли выполнить преобразования в Group'е
      *
      * @return true если преобразование возможно, false инчае
@@ -140,12 +132,36 @@ public class MeasureGroup {
                 .collect(Collectors.joining()) + " ]";
     }
 
-  public int size() {
+    public int size() {
         return units.size();
-  }
+    }
+
+
+    public int power(){
+        return units.stream().mapToInt(Unit::getPower).sum();
+    }
 
     public boolean isConvertible(final MeasureGroup measureGroup) {
         if(measureGroup == null) return false;
-        return measureGroup.units.stream().mapToLong(Unit::getPower).sum() == this.units.stream().mapToLong(Unit::getPower).sum();
+        return this.power() == measureGroup.power();
+    }
+
+    @Override
+    public boolean hasNext() {
+        return units.iterator().hasNext();
+    }
+
+    @Override
+    public Unit next() {
+        return units.iterator().next();
+    }
+
+    /**
+     * Получает из Group'ы следующий Unit
+     *
+     * @return возвращаемый Unit
+     */
+    public Unit getNext() {
+        return units.remove();
     }
 }

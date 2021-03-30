@@ -1,5 +1,6 @@
 package com.example.UniversalConverter;
 
+import java.util.Objects;
 import org.apache.commons.collections4.map.HashedMap;
 
 import java.math.BigDecimal;
@@ -40,5 +41,22 @@ public class Node {
      */
     public String getUnitName() {
         return unitName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Node node = (Node) o;
+        return Objects.equals(unitName, node.unitName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(unitName);
     }
 }

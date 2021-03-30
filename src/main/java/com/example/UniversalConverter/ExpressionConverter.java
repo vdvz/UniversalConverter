@@ -1,6 +1,8 @@
 package com.example.UniversalConverter;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,82 +37,77 @@ public class ExpressionConverter implements ExpressionConverter_I {
 
     @Override
     public BigDecimal convert(Expression from, Expression to) {
-
+        ConversionRate conversionRate = new ConversionRate(BigDecimal.ONE, BigDecimal.ONE);
         List<MeasureGroup> toMeasureGroups = to.getMeasures();
         for (MeasureGroup fromGroup : from.getMeasures()) {
             MeasureGroup toGroup = toMeasureGroups.get(toMeasureGroups.indexOf(fromGroup));
-            ConversionRate fromConversionRate = reductionGroup(fromGroup);
-            ConversionRate toConversionRate = reductionGroup(toGroup);
-            numeratorK = numeratorK.multiply(fromConversionRate.getDivisor()).multiply(toConversionRate.getNumerator());
-            divisorK = divisorK.multiply(toConversionRate.getDivisor()).multiply(fromConversionRate.getNumerator());
-            logger.debug("Start converting group " + fromGroup.toString() + " to group " + toGroup.toString());
-            convertGroup(fromGroup, toGroup);
+            Unit toCon = new Unit(fromGroup.next().getName());
+            ConversionRate fromReductionRate = reductionGroup(fromGroup, toCon);
+            logger.debug("WHAT " + toGroup);
+            ConversionRate toReductionRate = reductionGroup(toGroup, toCon);
+
+            conversionRate = conversionRate.multiply(fromReductionRate.invert()).multiply(toReductionRate);
+
+            ConversionRate conversionRateForGroup = convertGroup(fromGroup, toGroup);
+
+            conversionRate.multiply(conversionRateForGroup);
         }
-        logger.debug("Текущий числитель: " + numeratorK);
-        logger.debug("Текущий знаменатель: " + divisorK);
-        return numeratorK.divide(divisorK, maxScale, roundPolitic);
+
+        logger.debug("Conversion rate " + conversionRate + " actual numerator " + numeratorK + " ,divisor " + divisorK);
+        return conversionRate.getNumerator().divide(conversionRate.getDivisor(), maxScale, roundPolitic);
     }
 
 
-    private ConversionRate reductionGroup(MeasureGroup group){
-        ConversionRate conversionRateForGroup = new ConversionRate(BigDecimal.ONE, BigDecimal.ONE);
+    private ConversionRate reductionGroup(MeasureGroup group, Unit fromUnit){
+        ConversionRate conversionRateForGroup = new ConversionRate();
         MeasureGraph conversionGraph = group.getGraph();
         logger.debug("Сокращение группы " + group.toString());
-        int k = 0;
-        while (group.size() != 1) {
-            if(k>6) break;
+        logger.debug("Приведение к " + fromUnit);
+
+        Node fromNode = conversionGraph.findNode(fromUnit.getName());
+
+        var k=0;
+        while (group.size() != 1){
+            if(k>4) break;
             k++;
             Queue<MultiplicationUnit> neighbors = new LinkedList<>();
-            Unit fromUnit = group.getNext();
-
-            logger.debug("Получили Unit из группы: " + fromUnit.getName());
-            Node fromNode = conversionGraph.findNode(fromUnit.getName());
 
             fromNode.getNeighbors().forEach((node, conversionRate) -> {
-                neighbors.add(new MultiplicationUnit(node, conversionRate));
+                neighbors.add(new MultiplicationUnit(node, new ConversionRate(conversionRate)));
             });
 
-            /*Проходим по всем нодам достяжимым из fromNode*/
-            var a = 0;
+            Set<Node> visitedNode = new HashSet<>();
             while (!neighbors.isEmpty()) {
-                if(a>6) System.exit(-1);
-                a++;
                 MultiplicationUnit mlUnit = neighbors.remove();
                 Node currentNode = mlUnit.getNode();
-                ConversionRate currentConversionRate = mlUnit.getConversionRate();
-                logger.debug("Сосед: " + currentNode.getUnitName());
+                visitedNode.add(currentNode);
 
-                /* Проверяем есть ли в группе элемент с таким же названием как у текущей ноды */
+                logger.debug("Текущий unit: " + currentNode.getUnitName());
+
                 Unit toUnit = group.getUnitByName(currentNode.getUnitName());
                 if (!Objects.equals(toUnit, null)) {
-                    int fromPower = fromUnit.getPower();
-                    BigDecimal newNumerator;
-                    BigDecimal newDivisor;
+                    int toPower = toUnit.getPower();
+                    ConversionRate currentConversionRate = new ConversionRate(mlUnit.getConversionRate());
                     logger.debug("Такой сосед существует. Юнит перевода из" + fromUnit +" в Unit " + toUnit);
-                    if(fromPower > 0){
-                        newNumerator = conversionRateForGroup.getNumerator().multiply(currentConversionRate.getNumerator().pow(fromPower));
-                        newDivisor = conversionRateForGroup.getDivisor().multiply(currentConversionRate.getDivisor().pow(fromPower));
-                    } else {
-                        newNumerator = conversionRateForGroup.getNumerator().multiply(currentConversionRate.getDivisor().pow(Math.abs(fromPower)));
-                        newDivisor = conversionRateForGroup.getDivisor().multiply(currentConversionRate.getNumerator().pow(Math.abs(fromPower)));
-                    }
+                    logger.debug("Кф перехода: " + currentConversionRate);
+                    logger.debug("Степень преобразования: " + toPower);
 
-                    logger.info("Коэффициент сокращения числитель: " + newNumerator);
-                    logger.info("Коэффициент сокращения знаменатель " + newDivisor);
+                    conversionRateForGroup = conversionRateForGroup.multiply(currentConversionRate.pow(toPower).invert());
 
-                    conversionRateForGroup.setNumerator(newNumerator);
-                    conversionRateForGroup.setDivisor(newDivisor);
-
-                    group.addUnit(toUnit, fromUnit.getPower());
-                    logger.debug("Текущая группа" + group.toString());
+                    logger.debug("Общий conversionrate " + conversionRateForGroup);
+                    logger.debug("Текущая группа: " + group.toString());
+                    logger.debug("Доавленеие в группу " + toUnit + " степень " + (-1) * toPower);
+                    group.addUnit(fromUnit, toPower);
+                    group.addUnit(toUnit,(-1) * toPower);
+                    logger.debug("Текущая группа: " + group.toString());
                     break;
                 } else {
                     /*Добавляем всех соседей текущей ноды*/
-                    logger.debug("Выполняем шаг и добавляем новых соседей");
                     currentNode.getNeighbors().forEach((node, transitionK) -> {
-                        var newNumerator = mlUnit.getConversionRate().getNumerator().multiply(transitionK.getNumerator());
-                        var newDivisor = mlUnit.getConversionRate().getDivisor().multiply(transitionK.getDivisor());
-                        neighbors.add(new MultiplicationUnit(node, new ConversionRate(newNumerator, newDivisor)));
+                        if(!visitedNode.contains(node)){
+                            ConversionRate curConversionRate = new ConversionRate(mlUnit.getConversionRate());
+                            neighbors.add(new MultiplicationUnit(node, curConversionRate.multiply(transitionK)));
+                        }
                     });
                 }
             }
@@ -119,12 +116,10 @@ public class ExpressionConverter implements ExpressionConverter_I {
         return conversionRateForGroup;
     }
 
-    private void convertGroup(MeasureGroup fromGroup, MeasureGroup toGroup) {
+    private ConversionRate convertGroup(MeasureGroup fromGroup, MeasureGroup toGroup) {
+        ConversionRate conversionRateForGroup = new ConversionRate(BigDecimal.ONE, BigDecimal.ONE);
         MeasureGraph conversionGraph = fromGroup.getGraph();
-        int k = 0;
         while (!fromGroup.isEmpty()) {
-            if(k>6) break;
-            k++;
             Queue<MultiplicationUnit> neighbors = new LinkedList<>();
             Unit fromUnit = fromGroup.getNext();
 
@@ -132,44 +127,43 @@ public class ExpressionConverter implements ExpressionConverter_I {
             Node fromNode = conversionGraph.findNode(fromUnit.getName());
 
             fromNode.getNeighbors().forEach((node, conversionRate) -> {
-                neighbors.add(new MultiplicationUnit(node, conversionRate));
+                    neighbors.add(new MultiplicationUnit(node, new ConversionRate(conversionRate)));
             });
 
-            /*Проходим по всем нодам достяжимым из fromNode*/
+            Set<Node> visitedNode = new HashSet<>();
             while (!neighbors.isEmpty()) {
                 MultiplicationUnit mlUnit = neighbors.remove();
                 Node currentNode = mlUnit.getNode();
-                ConversionRate currentConversionRate = mlUnit.getConversionRate();
-                logger.debug("Сосед: " + currentNode.getUnitName());
+                visitedNode.add(currentNode);
+
+                logger.debug("Текущая нода " + currentNode.getUnitName());
 
                 /* Проверяем есть ли в группе элемент с таким же названием как у текущей ноды */
-                Unit toUnit = toGroup.getUnitByName(currentNode.getUnitName());
                 int fromPower = fromUnit.getPower();
+                Unit toUnit = toGroup.getUnitByName(currentNode.getUnitName());
                 if (!Objects.equals(toUnit, null) && fromPower == toUnit.getPower()){
-
-                    if(fromPower < 0 ){
-                        divisorK = divisorK.multiply(currentConversionRate.getNumerator().pow(Math.abs(fromPower)));
-                        numeratorK = numeratorK.multiply(currentConversionRate.getDivisor().pow(Math.abs(fromPower)));
-                    }
-                    if(fromPower > 0) {
-                        numeratorK = numeratorK.multiply(currentConversionRate.getNumerator().pow(fromPower));
-                        divisorK = divisorK.multiply(currentConversionRate.getDivisor().pow(fromPower));
-                    }
-
-                    toGroup.addUnit(toUnit, fromPower);
-                    logger.debug("Текущая группа из которой преобразовывают: " + fromGroup);
-                    logger.debug("Текущая группа в которую преобразовывают: " + toGroup);
+                    ConversionRate currentConversionRate = mlUnit.getConversionRate();
+                    logger.debug("Конвертируем из " + fromUnit + " в " + toUnit);
+                    logger.debug("Карент конвершен рейт " + currentConversionRate);
+                    conversionRateForGroup = conversionRateForGroup.multiply(currentConversionRate.pow(fromPower));
+                    logger.debug("Текущий кф преобразования " + conversionRateForGroup);
+                    toGroup.addUnit(toUnit, (-1)*fromPower);
+                    logger.debug("Текущая группа " + toGroup);
                     break;
                 } else {
                     /*Добавляем всех соседей текущей ноды*/
-                    logger.debug("Выполняем шаг и добавляем новых соседей");
                     currentNode.getNeighbors().forEach((node, transitionK) -> {
-                        var newNumerator = mlUnit.getConversionRate().getNumerator().multiply(transitionK.getNumerator());
-                        var newDivisor = mlUnit.getConversionRate().getDivisor().multiply(transitionK.getDivisor());
-                        neighbors.add(new MultiplicationUnit(node, new ConversionRate(newNumerator, newDivisor)));
+                        if(!visitedNode.contains(node)){
+                            logger.debug("Добавяляем новую ноду: " + node.getUnitName());
+                            var newTransitionK = new ConversionRate(mlUnit.getConversionRate()).multiply(transitionK);
+                            logger.debug("Conversion rate will be " + newTransitionK);
+                            neighbors.add(new MultiplicationUnit(node, new ConversionRate(newTransitionK)));
+
+                        }
                     });
                 }
             }
         }
+        return conversionRateForGroup;
     }
 }
