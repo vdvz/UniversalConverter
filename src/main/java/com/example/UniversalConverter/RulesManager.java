@@ -25,6 +25,12 @@ public class RulesManager {
         throw new NoAvailableRulesException();
     }
 
+    /**
+     * Создает правила конвертации из ресурса pathToResourceWithRules
+     * @param pathToResourceWithRules ресурс с
+     * @return  Rules - правила конвертации.
+     * @throws IOException В случае невозможности создать Rules.
+     */
     public static Rules createRules(String pathToResourceWithRules) throws IOException {
         if (pathToResourceWithRules == null) {
             throw new NoSuchFileException("Путь до ресурса с правилами не задан");
@@ -32,65 +38,66 @@ public class RulesManager {
 
         logger.info("Создание правил. Путь до ресурса с правилами: " + pathToResourceWithRules);
 
-        Map<String, MeasureGraph> knownUnits = new HashMap<>();
+        Map<String, MeasureGraph> knownNodes = new HashMap<>();
         try (ResourceReader_I reader = new ConversionRulesReader(pathToResourceWithRules)) {
             String[] values;
+            /*получаем новые значения*/
             while ((values = reader.getNextValues()) != null) {
-                String attachableNodeName = values[0];
-                String nodeNameToAttach = values[1];
+                String sourceNodeName = values[0];
+                String targetNodeName = values[1];
                 BigDecimal rate = new BigDecimal(values[2]);
                 if (rate.compareTo(BigDecimal.ZERO) == 0) {
                     logger.info(
-                            "Коэффициент преобразования из \"" + attachableNodeName + "\" в \""
-                                + nodeNameToAttach + "\" равен 0. Такое правило не будет учтено.");
+                            "Коэффициент преобразования из \"" + sourceNodeName + "\" в \""
+                                + targetNodeName + "\" равен 0. Такое правило не будет учтено.");
                     continue;
                 }
 
                 MeasureGraph existingGraph;
-                if ((existingGraph = knownUnits.get(attachableNodeName)) != null) {
+                if ((existingGraph = knownNodes.get(sourceNodeName)) != null) {
                     MeasureGraph graphToAttach;
-                    if((graphToAttach = knownUnits.get(nodeNameToAttach)) != null){
-                        Node nodeToAttach = graphToAttach.getNodeByName(nodeNameToAttach);
-                        Node attachableNode = existingGraph.getNodeByName(attachableNodeName);
+                    if((graphToAttach = knownNodes.get(targetNodeName)) != null){
+                        Node nodeToAttach = graphToAttach.getNodeByName(targetNodeName);
+                        Node attachableNode = existingGraph.getNodeByName(sourceNodeName);
                         graphToAttach.bindGraph(attachableNode, nodeToAttach, rate, existingGraph);
                         MeasureGraph finalExistingGraph = existingGraph;
-                        knownUnits.forEach((unit, measureGraph) -> {
+                        knownNodes.forEach((unit, measureGraph) -> {
                             if (measureGraph.equals(finalExistingGraph)) {
-                                knownUnits.replace(unit, graphToAttach);
+                                knownNodes.replace(unit, graphToAttach);
                             }
                         });
                     }else{
-                        Node nodeToAttach = new Node(nodeNameToAttach);
-                        Node attachableNode = existingGraph.getNodeByName(attachableNodeName);
+                        Node nodeToAttach = new Node(targetNodeName);
+                        Node attachableNode = existingGraph.getNodeByName(sourceNodeName);
                         existingGraph.bindNode(attachableNode, nodeToAttach, rate);
-                        knownUnits.put(nodeNameToAttach, existingGraph);
+                        knownNodes.put(targetNodeName, existingGraph);
                     }
 
-                } else if ((existingGraph = knownUnits.get(nodeNameToAttach)) != null) {
+                } else if ((existingGraph = knownNodes.get(targetNodeName)) != null) {
                     MeasureGraph attachableGraph;
-                    if((attachableGraph = knownUnits.get(attachableNodeName)) != null){
-                        Node nodeToAttach = existingGraph.getNodeByName(nodeNameToAttach);
-                        Node attachableNode = attachableGraph.getNodeByName(attachableNodeName);
+                    if((attachableGraph = knownNodes.get(sourceNodeName)) != null){
+                        Node nodeToAttach = existingGraph.getNodeByName(targetNodeName);
+                        Node attachableNode = attachableGraph.getNodeByName(sourceNodeName);
                         existingGraph.bindGraph(attachableNode, nodeToAttach, rate, attachableGraph);
                         MeasureGraph finalExistingGraph = existingGraph;// make effectively final
-                        knownUnits.forEach((unit, measureGraph) -> {
+                        knownNodes.forEach((unit, measureGraph) -> {
                             if (measureGraph.equals(attachableGraph)) {
-                                knownUnits.replace(unit, finalExistingGraph);
+                                knownNodes.replace(unit, finalExistingGraph);
                             }
                         });
                     }else{
-                        Node nodeToAttach = existingGraph.getNodeByName(nodeNameToAttach);
-                        Node attachableNode = new Node(attachableNodeName);;
+                        Node nodeToAttach = existingGraph.getNodeByName(targetNodeName);
+                        Node attachableNode = new Node(sourceNodeName);;
                         existingGraph.bindNode(attachableNode, nodeToAttach, rate);
-                        knownUnits.put(attachableNodeName, existingGraph);
+                        knownNodes.put(sourceNodeName, existingGraph);
                     }
                 } else {
-                    Node attachableNode = new Node(attachableNodeName);
-                    Node nodeToAttach = new Node(nodeNameToAttach);
+                    Node attachableNode = new Node(sourceNodeName);
+                    Node nodeToAttach = new Node(targetNodeName);
                     existingGraph = new MeasureGraph(nodeToAttach);
-                    knownUnits.put(nodeNameToAttach, existingGraph);
+                    knownNodes.put(targetNodeName, existingGraph);
                     existingGraph.bindNode(attachableNode, nodeToAttach, rate);
-                    knownUnits.put(attachableNodeName, existingGraph);
+                    knownNodes.put(sourceNodeName, existingGraph);
                 }
             }
 
@@ -98,9 +105,14 @@ public class RulesManager {
             e.printStackTrace();
         }
 
-       rules = new Rules(knownUnits);
+       rules = new Rules(knownNodes);
         logger.info("Новые правила созданы");
         return rules;
     }
+
+    private static void attacheNodeToExistingGraph(final HashMap<String, MeasureGraph> knownNodes,String existingGraphNode, MeasureGraph existingGraph){
+
+    }
+
 
 }

@@ -25,7 +25,7 @@ public class ConversionHandler {
     }
 
     public void handleRequest(ConversionRequest request)
-            throws InvalidStringForParsing, IncorrectDimensionException, UnknownNameOfUnitException {
+            throws IncorrectDimensionException, UnknownNameOfUnitException {
         Expression from = parser.parseStringToExpression(request.getFrom(), rules);
         Expression to = parser.parseStringToExpression(request.getTo(), rules);
 

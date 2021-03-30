@@ -24,7 +24,7 @@ public class ExpressionConverter implements ExpressionConverter_I {
     private final int maxScale;
 
     public ExpressionConverter() {
-        maxScale = 40;
+        maxScale = 15;
         roundPolitic = RoundingMode.HALF_DOWN;
     }
 

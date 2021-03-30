@@ -18,13 +18,13 @@ public class ConversionRequestParser {
     }
 
     public Expression parseStringToExpression(String sourceStr, Rules rules)
-            throws InvalidStringForParsing, UnknownNameOfUnitException {
-        //preParsingChecks(sourceStr);
+            throws UnknownNameOfUnitException {
 
         Map<MeasureGraph, MeasureGroup> knownGroups = new HashMap<>();
         List<MeasureGroup> expressionGroups = new ArrayList<>();
         String[] sub = sourceStr.split("/");
 
+        /*создаем unit'ы с именами из запроса и степенью 1 и -1 для числителя и знаменателя соответсвенно*/
         String numeratorStr = sub[0];
         List<Unit> expressionUnits = Arrays.stream(numeratorStr.split("\\*")).map(String::trim)
                 .filter(e -> !e.equals("1")).map(Unit::new).collect(Collectors.toList());
@@ -35,19 +35,25 @@ public class ConversionRequestParser {
                     .map(e -> new Unit(e, -1)).forEach(expressionUnits::add);
         }
 
+
+        /*На основании принадлежности имени Unit'a к графу формируем группы*/
         for (Unit unit : expressionUnits) {
-            //Check if unit exists and if so then get graphForCurrentUnit
+            /*пустые строки (безразмерные величины) игнорируем. у них нет существует правил конвертации.*/
             if(unit.getName().equals("")){
                 continue;
             }
+            /*Ищем граф, к которому принадлежит данный unit*/
             MeasureGraph graphForCurrentUnit = rules.getGraph(unit.getName());
             if (graphForCurrentUnit == null) {
                 throw new UnknownNameOfUnitException();
             }
             MeasureGroup currentGroup;
+            /*Ищем группу, которая строилась на основании graphForCurrentUnit*/
             if ((currentGroup = knownGroups.get(graphForCurrentUnit)) != null) {
+                /*если нашли, то добавляем к ней unit*/
                 currentGroup.addUnit(unit, unit.getPower());
             } else {
+                /*если нет создаем новую группу на основании графа, добавляем ее в известные, и в нее кладем unit*/
                 currentGroup = new MeasureGroup(graphForCurrentUnit);
                 currentGroup.addUnit(unit, unit.getPower());
                 knownGroups.put(graphForCurrentUnit, currentGroup);

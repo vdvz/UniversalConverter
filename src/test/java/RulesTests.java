@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.slf4j.ILoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -192,6 +193,18 @@ public class RulesTests {
         );
     }
 
+
+    public static Stream<TestRequest> sourcesForCorrectTestsWithDimensionless() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return Stream.of(
+            new TestRequest(mapper.readValue("{\"from\" : \"\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("1").setScale(15)),
+            new TestRequest(mapper.readValue("{\"from\" : \"км/м\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
+            new TestRequest(mapper.readValue("{\"from\" : \"\", \"to\" : \"км/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
+            new TestRequest(mapper.readValue("{\"from\" : \"м**км\", \"to\" : \"мм*мм/\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15)),
+            new TestRequest(mapper.readValue("{\"from\" : \"/мм*мм\", \"to\" : \"1/*м*км*\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15))
+        );
+    }
+
     public static Stream<ConversionRequest> sourcesForIncorrectDimensionTests()
         throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
@@ -215,6 +228,22 @@ public class RulesTests {
     }
 
     @DisplayName("simple tests with right answer")
+    @ParameterizedTest
+    @MethodSource("sourcesForCorrectTestsWithDimensionless")
+    public void simpleRightTestsWithDimensionless(TestRequest testRequest){
+        ConversionRequest request = testRequest.request;
+        BigDecimal answer = testRequest.answer;
+
+        var ref = new Object() {
+            BigDecimal currentAnswer;
+        };
+
+        assertDoesNotThrow(() -> ref.currentAnswer = algorithm(request.getFrom(), request.getTo()));
+        assertEquals(answer, ref.currentAnswer);
+    }
+
+
+    @DisplayName("simple tests with dimensionless measure")
     @ParameterizedTest
     @MethodSource("sourcesForCorrectTests")
     public void simpleRightTests(TestRequest testRequest){
@@ -243,5 +272,15 @@ public class RulesTests {
         assertThrows(UnknownNameOfUnitException.class, () -> algorithm(request.getFrom(), request.getTo()));
     }
 
+
+    @Test
+    public void dd(){
+        var dec = new BigDecimal("10000.00000000000000000000000000111000000").stripTrailingZeros();
+        if(dec.toString().length() > 15){
+            System.out.println(dec.toString().substring(0, 15));
+        } else {
+            System.out.println(dec.toString());
+        }
+    }
 
 }

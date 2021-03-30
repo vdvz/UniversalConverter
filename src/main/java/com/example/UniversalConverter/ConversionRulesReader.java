@@ -17,6 +17,9 @@ public class ConversionRulesReader implements ResourceReader_I {
         reader = new CSVReader(fr);
     }
 
+    /**
+     * @return Массив строк, где 1 элемент S, 2 элемент, 3 элемент value из правил конвертации
+     */
     @Override
     public String[] getNextValues() throws IOException, CsvValidationException {
         return reader.readNext();

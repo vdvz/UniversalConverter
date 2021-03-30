@@ -16,12 +16,12 @@ public class ConversionRate {
         this.divisor = BigDecimal.ONE;
     }
 
-    ConversionRate(ConversionRate conversionRate){
+    public ConversionRate(final ConversionRate conversionRate){
         this.numerator = conversionRate.numerator;
         this.divisor = conversionRate.divisor;
     }
 
-    public ConversionRate(BigDecimal numerator, BigDecimal divisor){
+    public ConversionRate(final BigDecimal numerator, final BigDecimal divisor){
         this.numerator = numerator;
         this.divisor = divisor;
     }
@@ -52,7 +52,7 @@ public class ConversionRate {
         return this;
     }
 
-    public ConversionRate multiply(ConversionRate multiplicand){
+    public ConversionRate multiply(final ConversionRate multiplicand){
         logger.debug("Multiply this " + this + " on " + multiplicand);
         this.numerator = numerator.multiply(multiplicand.numerator);
         this.divisor = divisor.multiply(multiplicand.divisor);
