@@ -36,7 +36,6 @@ public class ConversionRate {
 
     public ConversionRate pow(int n){
         if(n < 0){
-            logger.debug("INVERT " + this);
             invert();
             n = Math.abs(n);
         }
@@ -47,7 +46,6 @@ public class ConversionRate {
     }
 
     public ConversionRate invert(){
-        logger.debug("in vert");
         var sub = numerator;
         numerator = divisor;
         divisor = sub;

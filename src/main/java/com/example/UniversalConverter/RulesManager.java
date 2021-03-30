@@ -103,24 +103,4 @@ public class RulesManager {
         return rules;
     }
 
-    private static void attachNodeToExistingGraph(Map<String, MeasureGraph> knownUnits,
-                                                  String attachableNodeName, String nodeNameToAttach, MeasureGraph existingGraph,
-                                                  BigDecimal rate) {
-        Node nodeToAttache = existingGraph.findNode(nodeNameToAttach);
-
-        MeasureGraph attachableGraph;
-        if ((attachableGraph = knownUnits.get(attachableNodeName)) != null) {
-            Node attachableNode = attachableGraph.getNodeByName(attachableNodeName);
-            existingGraph.bindGraph(attachableNode, nodeToAttache, rate, attachableGraph);
-            knownUnits.forEach((unit, measureGraph) -> {
-                if (measureGraph.equals(attachableGraph)) {
-                    knownUnits.replace(unit, existingGraph);
-                }
-            });
-        } else {
-            existingGraph.bindNode(new Node(attachableNodeName), nodeToAttache, rate);
-            knownUnits.put(attachableNodeName, existingGraph);
-        }
-    }
-
 }

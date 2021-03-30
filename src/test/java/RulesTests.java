@@ -145,7 +145,6 @@ public class RulesTests {
         Expression from = parser.parseStringToExpression(fromStr, rules);
         Expression to = parser.parseStringToExpression(toStr, rules);
 
-        System.out.println("TOTOTO: " + to);
         PreProcessingPhase.preprocessing(from, to);
 
         return converter.convert(from, to);
@@ -171,7 +170,7 @@ public class RulesTests {
                 new TestRequest(mapper.readValue("{\"from\" : \"д\", \"to\" : \"ч\"}", ConversionRequest.class), new BigDecimal("24").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"д\"}", ConversionRequest.class), new BigDecimal("0.041666666666667").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"м/км*км\", \"to\" : \"1/см\"}", ConversionRequest.class), new BigDecimal("0.00000001").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/м\", \"to\" : \"мм*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(15)),
+                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/м\", \"to\" : \"мм*см\"}", ConversionRequest.class), new BigDecimal("100000000000000").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"гр\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15))
