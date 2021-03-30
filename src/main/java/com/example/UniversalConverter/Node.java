@@ -13,7 +13,7 @@ public class Node {
 
     private final String unitName;
 
-    Map<Node, BigDecimal> neighbours = new HashMap<>();
+    Map<Node, ConversionRate> neighbours = new HashMap<>();
 
     public Node(String unitName) {
         this.unitName = unitName;
@@ -23,15 +23,15 @@ public class Node {
      * @param node Вершина-сосед
      * @param rate Коэффициент преобразования
      */
-    public void addEdge(Node node, BigDecimal rate) {
+    public void addEdge(Node node, ConversionRate rate) {
         neighbours.put(node, rate);
     }
 
     /**
-     * @return Возвращает Map<Node, BigDecimal>, где Node - вершина-сосед,
-     * BigDecimal - коэффициент преобразования к соседу
+     * @return Возвращает Map<Node, ConversionRate>, где Node - вершина-сосед,
+     * ConversionRate - коэффициент преобразования к соседу
      */
-    public Map<Node, BigDecimal> getNeighbors() {
+    public Map<Node, ConversionRate> getNeighbors() {
         return new HashedMap<>(neighbours);
     }
 

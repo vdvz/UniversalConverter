@@ -5,24 +5,24 @@ import java.math.BigDecimal;
 public class MultiplicationUnit {
 
     private Node node;
-    private BigDecimal K;
+    private ConversionRate conversionRate;
 
-    public MultiplicationUnit(Node _node, BigDecimal k) {
+    public MultiplicationUnit(Node _node, ConversionRate k) {
         node = _node;
-        K = k;
+        conversionRate = k;
     }
 
     public MultiplicationUnit(Node _node) {
         node = _node;
-        K = BigDecimal.ONE;
+        conversionRate = new ConversionRate(BigDecimal.ONE, BigDecimal.ONE);
     }
 
-    public BigDecimal getK() {
-        return K;
+    public ConversionRate getConversionRate() {
+        return conversionRate;
     }
 
-    public void setK(BigDecimal k) {
-        K = k;
+    public void setConversionRate(ConversionRate k) {
+        conversionRate = k;
     }
 
     public Node getNode() {

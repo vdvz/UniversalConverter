@@ -1,5 +1,8 @@
 package com.example.UniversalConverter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Optional;
@@ -12,6 +15,9 @@ import java.util.Set;
  *           Где день, декада, год, км, см, м - Node'ы с соответсвующими названиями.
  */
 public class MeasureGraph {
+
+    private static final Logger logger = LogManager.getLogger(MeasureGraph.class);
+
 
     private final Set<Node> nodes;
     private final Node rootNode;
@@ -29,9 +35,12 @@ public class MeasureGraph {
     }
 
     public void bindNode(Node fromNode, Node toNode, BigDecimal rate) {
+        logger.debug("Bind node " + fromNode.getUnitName() + " to " + toNode.getUnitName() + " rate " + rate);
         nodes.add(fromNode);
         nodes.add(toNode);
-        fromNode.addEdge(toNode, rate);
+
+        fromNode.addEdge(toNode, new ConversionRate(rate, BigDecimal.ONE));
+        toNode.addEdge(fromNode, new ConversionRate(BigDecimal.ONE, rate));
     }
 
     public boolean isRootNode(Node node) {
@@ -40,7 +49,10 @@ public class MeasureGraph {
 
     public void bindGraph(Node fromNode, Node toNode, BigDecimal rate, MeasureGraph newGraph) {
         nodes.addAll(newGraph.nodes);
-        fromNode.addEdge(toNode, rate);
+        logger.debug("Vertix from " + fromNode.getUnitName() + " to node " + toNode.getUnitName() + " " + rate);
+
+        fromNode.addEdge(toNode, new ConversionRate(rate, BigDecimal.ONE));
+        toNode.addEdge(fromNode, new ConversionRate(BigDecimal.ONE, rate));
     }
 
     public Node getNodeByName(String name) {
