@@ -1,12 +1,12 @@
 package com.example.UniversalConverter;
 
+import com.example.UniversalConverter.Controller.ConversionController;
 import com.example.UniversalConverter.Converter.ConversionRate;
 import com.example.UniversalConverter.Converter.PreProcessingAndChecks;
 import com.example.UniversalConverter.Converter.UniversalExpressionConverter;
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 import com.example.UniversalConverter.Exceptions.UnknownNameOfUnitException;
 import com.example.UniversalConverter.Parser.ConversionRequestParser;
-import com.example.UniversalConverter.RequestRepresentation.ConversionRequest;
 import com.example.UniversalConverter.RequestRepresentation.Expression;
 import com.example.UniversalConverter.RequestRepresentation.MeasureGroup;
 import com.example.UniversalConverter.RequestRepresentation.Unit;
@@ -14,6 +14,7 @@ import com.example.UniversalConverter.RulesRepresentation.Graph.MeasureGraph;
 import com.example.UniversalConverter.RulesRepresentation.Graph.Node;
 import com.example.UniversalConverter.RulesRepresentation.Rules;
 import com.example.UniversalConverter.RulesRepresentation.RulesManager;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.RoundingMode;
@@ -207,6 +208,22 @@ public class BaseTestsOnAlgorithm {
         }
     }
 
+    static class ConversionRequest{
+        @JsonProperty("from")
+        private String from;
+
+        @JsonProperty("to")
+        private String to;
+
+        public String getFrom() {
+            return from;
+        }
+
+        public String getTo() {
+            return to;
+        }
+    }
+
     public static Stream<TestRequest> sourcesForCorrectTests() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return Stream.of(
@@ -321,13 +338,4 @@ public class BaseTestsOnAlgorithm {
         assertThrows(UnknownNameOfUnitException.class, () -> algorithm(request.getFrom(), request.getTo()));
     }
 
-    @Test
-    public void tt(){
-        var a = new BigDecimal("0.0001234");
-        var b = Math.abs(a.precision() - a.scale() - 1) + 1;
-        System.out.println(a.toPlainString().charAt(5));
-        System.out.println(b);
-        System.out.println(a.stripTrailingZeros().toPlainString().length());
-        System.out.println(a.stripTrailingZeros().toPlainString().substring(0, b+1));
-    }
 }

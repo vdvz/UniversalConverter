@@ -7,11 +7,12 @@ import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 import com.example.UniversalConverter.Exceptions.NoAvailableRulesException;
 import com.example.UniversalConverter.Exceptions.UnknownNameOfUnitException;
 import com.example.UniversalConverter.Parser.ConversionRequestParser;
-import com.example.UniversalConverter.RequestRepresentation.ConversionRequest;
 import com.example.UniversalConverter.RequestRepresentation.Expression;
 import com.example.UniversalConverter.RulesRepresentation.Rules;
 import com.example.UniversalConverter.RulesRepresentation.RulesManager;
 import java.math.BigDecimal;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -40,15 +41,17 @@ public class ConversionController {
     }
   }
 
-  @PostMapping("/convert")
-  ResponseEntity<String> getConversionRate(@RequestBody ConversionRequest request)
+  @PostMapping(value = "/convert", produces = "application/json;charset=UTF-8")
+  ResponseEntity<String> getConversionRate(@RequestBody Map<String, String> body)
       throws IncorrectDimensionException, UnknownNameOfUnitException {
-    logger.info(
-        "Get request for conversion. Need to convert from " + request.getFrom() + " to " + request
-            .getTo());
 
-    Expression from = parser.parseStringToExpression(request.getFrom(), rules);
-    Expression to = parser.parseStringToExpression(request.getTo(), rules);
+    var fromStr = body.get("from");
+    var toStr = body.get("to");
+    logger.info(
+        "Get request for conversion. Need to convert from " + fromStr + " to " + toStr);
+
+    Expression from = parser.parseStringToExpression(fromStr, rules);
+    Expression to = parser.parseStringToExpression(toStr, rules);
 
     preprocessing.preprocessing(from, to);
 
@@ -67,8 +70,15 @@ public class ConversionController {
 
     if (value.compareTo(BigDecimal.ONE) > 0) {
       var responseStr = value.stripTrailingZeros().toPlainString();
-      return responseStr.length() < COUNT_DIGITS_IN_RESPONSE ? responseStr
-          : responseStr.substring(0, COUNT_DIGITS_IN_RESPONSE);
+      if(responseStr.length() < COUNT_DIGITS_IN_RESPONSE){
+        return responseStr;
+      } else {
+        if(responseStr.contains(".")){
+          return responseStr.substring(0, COUNT_DIGITS_IN_RESPONSE+1);
+        } else {
+          return responseStr.substring(0, COUNT_DIGITS_IN_RESPONSE);
+        }
+      }
     } else {
       int indexOfFirstNonZeroDigit = Math.abs(value.precision() - value.scale() - 1) + 1;
       var responseStr = value.stripTrailingZeros().toPlainString();

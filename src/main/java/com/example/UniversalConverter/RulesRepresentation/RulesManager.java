@@ -77,8 +77,8 @@ public class RulesManager {
               }
             });
           } else {
-                        /*Создаем вершину с именем targetNodeName и присоединяем
-                        к вершине sourceNodeName в уже существующем графе*/
+            /*Создаем вершину с именем targetNodeName и присоединяем
+            к вершине sourceNodeName в уже существующем графе*/
             Node nodeToAttach = new Node(targetNodeName);
             Node attachableNode = existingGraph.getNodeByName(sourceNodeName);
             existingGraph.bindNode(attachableNode, nodeToAttach, rate);

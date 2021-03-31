@@ -81,7 +81,6 @@ public class ConversionRate {
    * @return this * multiplicand
    */
   public ConversionRate multiply(final ConversionRate multiplicand) {
-    logger.debug("Multiply this " + this + " on " + multiplicand);
     this.numerator = numerator.multiply(multiplicand.numerator);
     this.divisor = divisor.multiply(multiplicand.divisor);
     return this;
