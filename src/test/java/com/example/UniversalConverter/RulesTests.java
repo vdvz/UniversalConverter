@@ -5,6 +5,7 @@ import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
 import com.example.UniversalConverter.Exceptions.UnknownNameOfUnitException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.RoundingMode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,11 +25,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class RulesTests {
     static Rules rules = null;
-    static String rulePath = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
+    static String rulePath = "src/main/resources/conversion_rules";
 
     static ConversionRequestParser parser = new ConversionRequestParser();
     UniversalExpressionConverter converter;
-    private static final int SCALE_FOR_TESTS = 15;
+    private static final int SCALE_FOR_TESTS = 16;
 
     @BeforeAll
     public static void initRules(){
@@ -186,7 +187,7 @@ public class RulesTests {
                 new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(SCALE_FOR_TESTS)),
                 /*simple tests time(different view of graph)*/
                 new TestRequest(mapper.readValue("{\"from\" : \"д\", \"to\" : \"ч\"}", ConversionRequest.class), new BigDecimal("24").setScale(SCALE_FOR_TESTS)),
-                new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"д\"}", ConversionRequest.class), new BigDecimal("0.041666666666667").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"д\"}", ConversionRequest.class), new BigDecimal("60").divide(new BigDecimal("1440"), SCALE_FOR_TESTS, RoundingMode.HALF_DOWN)),
                 /*simple tests weight(different view of graph)*/
                 new TestRequest(mapper.readValue("{\"from\" : \"гр\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(SCALE_FOR_TESTS)),
                 new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(SCALE_FOR_TESTS)),
@@ -200,9 +201,9 @@ public class RulesTests {
                 new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/мм*гр\", \"to\" : \"м*см/мг\"}", ConversionRequest.class), new BigDecimal("100000000000").setScale(SCALE_FOR_TESTS)),
                 /*one of measure doesn't exists at one of side*/
                 new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км*с/ч\"}", ConversionRequest.class), new BigDecimal("3.6").setScale(SCALE_FOR_TESTS)),
-                new TestRequest(mapper.readValue("{\"from\" : \"км*с/ч\", \"to\" : \"м\"}", ConversionRequest.class), new BigDecimal("0.277777777777778").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"км*с/ч\", \"to\" : \"м\"}", ConversionRequest.class), new BigDecimal("10").divide(new BigDecimal("36"), SCALE_FOR_TESTS, RoundingMode.HALF_DOWN)),
                 /*absurd*/
-                new TestRequest(mapper.readValue("{\"from\" : \"км/м\", \"to\" : \"ч/с\"}", ConversionRequest.class), new BigDecimal("0.277777777777778").setScale(SCALE_FOR_TESTS))
+                new TestRequest(mapper.readValue("{\"from\" : \"км/м\", \"to\" : \"ч/с\"}", ConversionRequest.class), new BigDecimal("10").divide(new BigDecimal("36"), SCALE_FOR_TESTS, RoundingMode.HALF_DOWN))
 
         );
     }

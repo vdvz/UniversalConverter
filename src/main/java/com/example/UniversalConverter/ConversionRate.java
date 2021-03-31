@@ -1,6 +1,7 @@
 package com.example.UniversalConverter;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,4 +91,21 @@ public class ConversionRate {
             '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ConversionRate that = (ConversionRate) o;
+        return numerator.compareTo(that.numerator) == 0 &&
+            divisor.compareTo(that.divisor) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(numerator, divisor);
+    }
 }
