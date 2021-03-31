@@ -1,7 +1,6 @@
 package com.example.UniversalConverter;
 
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
-import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
 import com.example.UniversalConverter.Exceptions.NoAvailableRulesException;
 import com.example.UniversalConverter.Exceptions.UnknownNameOfUnitException;
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +30,7 @@ public class ConversionHandler {
 
         PreProcessingPhase.preprocessing(from, to);
 
-        ExpressionConverter_I converter = new ExpressionConverter();
+        ExpressionConverterI converter = new UniversalExpressionConverter();
         converter.convert(from, to);
     }
 }

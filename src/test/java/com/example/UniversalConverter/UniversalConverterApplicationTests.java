@@ -31,7 +31,6 @@ class UniversalConverterApplicationTests {
 		mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 	}
 
-	@Test
 	void firstRequest() throws Exception {
 		String uri = "/convert";
 
@@ -40,7 +39,6 @@ class UniversalConverterApplicationTests {
 		logger.info("Sending string " + req.toString());
 
 		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.post(uri).contentType(MediaType.APPLICATION_JSON).content(req.toString())).andReturn();
-
 		int status = mvcResult.getResponse().getStatus();
 		logger.info("Status is " + status);
 	}

@@ -28,23 +28,28 @@ public class Expression {
     }
 
     /**
-     * @return Возвращает группы данного Expression'a
+     * Возвращает список групп данного выражения
+     * @return MeasureGroup's
      */
     public List<MeasureGroup> getMeasures() {
         return measures;
     }
 
     /**
-     * Преобразовать выражение - найти коэффициент K такой, что K*[MeasureGroups] = 1
-     *
-     * @return true если выражение можно преобразовать, false инчае
+     * Преобразовать выражение - найти коэффициент K такой, что K*this = expression,
+     * где K - коэффициент преобразования (ConversionRate)
+     * @return true если выражение можно преобразовать к выражению expression, false инчае
      */
     public boolean isConversionAvailable(final Expression expression) {
         if (this == expression) return true;
         if (expression == null || getClass() != expression.getClass()) return false;
 
         return measures.stream().allMatch(e -> {
-            MeasureGroup measureGroup = expression.measures.get(measures.indexOf(e));
+            int index = expression.measures.indexOf(e);
+            if(index==-1){
+                return e.power() == 0;
+            }
+            MeasureGroup measureGroup = expression.measures.get(index);
             return e.isConvertible(measureGroup);
         });
     }

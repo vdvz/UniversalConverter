@@ -6,7 +6,7 @@ public class PreProcessingPhase {
 
     public static void checkDimension(final Expression from, final Expression to)
             throws IncorrectDimensionException {
-        if (!from.isConversionAvailable(to)) {
+        if (!from.isConversionAvailable(to) || !to.isConversionAvailable(from)) {
             throw new IncorrectDimensionException();
         }
     }

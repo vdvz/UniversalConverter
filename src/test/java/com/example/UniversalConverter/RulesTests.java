@@ -1,4 +1,5 @@
-import com.example.UniversalConverter.*;
+package com.example.UniversalConverter;
+
 import com.example.UniversalConverter.Exceptions.IncorrectDimensionException;
 import com.example.UniversalConverter.Exceptions.InvalidStringForParsing;
 import com.example.UniversalConverter.Exceptions.UnknownNameOfUnitException;
@@ -16,7 +17,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import org.slf4j.ILoggerFactory;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +27,8 @@ public class RulesTests {
     static String rulePath = "C:\\Users\\Vadim\\Desktop\\UniversalConverter\\src\\main\\resources\\conversion_rules";
 
     static ConversionRequestParser parser = new ConversionRequestParser();
-    ExpressionConverter converter;
+    UniversalExpressionConverter converter;
+    private static final int SCALE_FOR_TESTS = 15;
 
     @BeforeAll
     public static void initRules(){
@@ -39,7 +41,7 @@ public class RulesTests {
 
     @BeforeEach
     public void initConverter(){
-        converter = new ExpressionConverter();
+        converter = new UniversalExpressionConverter();
     }
 
     @Test
@@ -177,18 +179,30 @@ public class RulesTests {
     public static Stream<TestRequest> sourcesForCorrectTests() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return Stream.of(
-                new TestRequest(mapper.readValue("{\"from\" : \"км\", \"to\" : \"м\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"1/м\", \"to\" : \"1/км\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"1/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"д\", \"to\" : \"ч\"}", ConversionRequest.class), new BigDecimal("24").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"д\"}", ConversionRequest.class), new BigDecimal("0.041666666666667").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"м/км*км\", \"to\" : \"1/см\"}", ConversionRequest.class), new BigDecimal("0.00000001").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/м\", \"to\" : \"мм*см\"}", ConversionRequest.class), new BigDecimal("100000000000000").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"гр\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/мм*гр\", \"to\" : \"м*см/мг\"}", ConversionRequest.class), new BigDecimal("100000000000").setScale(15))
+                /*simple tests length*/
+                new TestRequest(mapper.readValue("{\"from\" : \"км\", \"to\" : \"м\"}", ConversionRequest.class), new BigDecimal("1000").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"1/м\", \"to\" : \"1/км\"}", ConversionRequest.class), new BigDecimal("1000").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"1/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(SCALE_FOR_TESTS)),
+                /*simple tests time(different view of graph)*/
+                new TestRequest(mapper.readValue("{\"from\" : \"д\", \"to\" : \"ч\"}", ConversionRequest.class), new BigDecimal("24").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"ч\", \"to\" : \"д\"}", ConversionRequest.class), new BigDecimal("0.041666666666667").setScale(SCALE_FOR_TESTS)),
+                /*simple tests weight(different view of graph)*/
+                new TestRequest(mapper.readValue("{\"from\" : \"гр\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(SCALE_FOR_TESTS)),
+                /*reduce left, right and convert*/
+                new TestRequest(mapper.readValue("{\"from\" : \"м/км*км\", \"to\" : \"1/см\"}", ConversionRequest.class), new BigDecimal("0.00000001").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"1/см\", \"to\" : \"м/км*км\"}", ConversionRequest.class), new BigDecimal("100000000").setScale(SCALE_FOR_TESTS)),
+                /*reduce left and right and convert*/
+                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/м\", \"to\" : \"мм*см\"}", ConversionRequest.class), new BigDecimal("100000000000000").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(SCALE_FOR_TESTS)),
+                /*multi-measure test*/
+                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/мм*гр\", \"to\" : \"м*см/мг\"}", ConversionRequest.class), new BigDecimal("100000000000").setScale(SCALE_FOR_TESTS)),
+                /*one of measure doesn't exists at one of side*/
+                new TestRequest(mapper.readValue("{\"from\" : \"м\", \"to\" : \"км*с/ч\"}", ConversionRequest.class), new BigDecimal("3.6").setScale(SCALE_FOR_TESTS)),
+                new TestRequest(mapper.readValue("{\"from\" : \"км*с/ч\", \"to\" : \"м\"}", ConversionRequest.class), new BigDecimal("0.277777777777778").setScale(SCALE_FOR_TESTS)),
+                /*absurd*/
+                new TestRequest(mapper.readValue("{\"from\" : \"км/м\", \"to\" : \"ч/с\"}", ConversionRequest.class), new BigDecimal("0.277777777777778").setScale(SCALE_FOR_TESTS))
 
         );
     }
@@ -197,13 +211,13 @@ public class RulesTests {
     public static Stream<TestRequest> sourcesForCorrectTestsWithDimensionless() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return Stream.of(
-            new TestRequest(mapper.readValue("{\"from\" : \"\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("1").setScale(15)),
-            new TestRequest(mapper.readValue("{\"from\" : \"км/м\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
-            new TestRequest(mapper.readValue("{\"from\" : \"\", \"to\" : \"км/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
-            new TestRequest(mapper.readValue("{\"from\" : \"м**км\", \"to\" : \"мм*мм/\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15)),
-            new TestRequest(mapper.readValue("{\"from\" : \"/мм*мм\", \"to\" : \"1/*м*км*\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15)),
-            new TestRequest(mapper.readValue("{\"from\" : \"/м*км\", \"to\" : \"/мм*мм\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15)),
-            new TestRequest(mapper.readValue("{\"from\" : \"мм*мм/\", \"to\" : \"м*км*/\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15))
+            new TestRequest(mapper.readValue("{\"from\" : \"\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("1").setScale(SCALE_FOR_TESTS)),
+            new TestRequest(mapper.readValue("{\"from\" : \"км/м\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("1000").setScale(SCALE_FOR_TESTS)),
+            new TestRequest(mapper.readValue("{\"from\" : \"\", \"to\" : \"км/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(SCALE_FOR_TESTS)),
+            new TestRequest(mapper.readValue("{\"from\" : \"м**км\", \"to\" : \"мм*мм/\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(SCALE_FOR_TESTS)),
+            new TestRequest(mapper.readValue("{\"from\" : \"/мм*мм\", \"to\" : \"1/*м*км*\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(SCALE_FOR_TESTS)),
+            new TestRequest(mapper.readValue("{\"from\" : \"/м*км\", \"to\" : \"/мм*мм\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(SCALE_FOR_TESTS)),
+            new TestRequest(mapper.readValue("{\"from\" : \"мм*мм/\", \"to\" : \"м*км*/\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(SCALE_FOR_TESTS))
         );
     }
 
@@ -214,7 +228,8 @@ public class RulesTests {
             mapper.readValue("{\"from\" : \"1/км\", \"to\" : \"м\"}", ConversionRequest.class),
             mapper.readValue("{\"from\" : \"км*км\", \"to\" : \"м\"}", ConversionRequest.class),
             mapper.readValue("{\"from\" : \"км\", \"to\" : \"м*м\"}", ConversionRequest.class),
-            mapper.readValue("{\"from\" : \"км*ч/с\", \"to\" : \"м*ч*с/с\"}", ConversionRequest.class)
+            mapper.readValue("{\"from\" : \"км*ч/с\", \"to\" : \"м*ч*с/с\"}", ConversionRequest.class),
+            mapper.readValue("{\"from\" : \"м\", \"to\" : \"км*с*с/ч\"}", ConversionRequest.class)
         );
     }
 
@@ -277,9 +292,9 @@ public class RulesTests {
 
     @Test
     public void dd(){
-        var dec = new BigDecimal("00010000.00000000000000000000000000111000000").stripTrailingZeros();
-        if(dec.toString().length() > 15){
-            System.out.println(dec.toString().substring(0, 15));
+        var dec = new BigDecimal("001.00").stripTrailingZeros();
+        if(dec.toString().length() > SCALE_FOR_TESTS){
+            System.out.println(dec.toString().substring(0, SCALE_FOR_TESTS));
         } else {
             System.out.println(dec.toString());
         }

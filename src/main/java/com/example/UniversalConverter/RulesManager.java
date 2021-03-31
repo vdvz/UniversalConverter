@@ -18,6 +18,10 @@ public class RulesManager {
 
     private static Rules rules;
 
+    /**
+     * @return Возвращает уже созданные Rules
+     * @throws NoAvailableRulesException - если Rules не были созданы
+     */
     public static Rules getRules() throws NoAvailableRulesException {
         if (rules != null) {
             return rules;
@@ -27,7 +31,7 @@ public class RulesManager {
 
     /**
      * Создает правила конвертации из ресурса pathToResourceWithRules
-     * @param pathToResourceWithRules ресурс с
+     * @param pathToResourceWithRules ресурс с правилами
      * @return  Rules - правила конвертации.
      * @throws IOException В случае невозможности создать Rules.
      */
@@ -39,13 +43,13 @@ public class RulesManager {
         logger.info("Создание правил. Путь до ресурса с правилами: " + pathToResourceWithRules);
 
         Map<String, MeasureGraph> knownNodes = new HashMap<>();
-        try (ResourceReader_I reader = new ConversionRulesReader(pathToResourceWithRules)) {
+        try (ResourceReaderI reader = new CsvConversionRulesReader(pathToResourceWithRules)) {
             String[] values;
             /*получаем новые значения*/
             while ((values = reader.getNextValues()) != null) {
                 String sourceNodeName = values[0];
                 String targetNodeName = values[1];
-                BigDecimal rate = new BigDecimal(values[2]);
+                BigDecimal rate = new BigDecimal(values[2]).stripTrailingZeros();
                 if (rate.compareTo(BigDecimal.ZERO) == 0) {
                     logger.info(
                             "Коэффициент преобразования из \"" + sourceNodeName + "\" в \""
@@ -109,10 +113,5 @@ public class RulesManager {
         logger.info("Новые правила созданы");
         return rules;
     }
-
-    private static void attacheNodeToExistingGraph(final HashMap<String, MeasureGraph> knownNodes,String existingGraphNode, MeasureGraph existingGraph){
-
-    }
-
 
 }

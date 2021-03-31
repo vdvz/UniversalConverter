@@ -1,10 +1,13 @@
 package com.example.UniversalConverter;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Коэффициент преобразования. Для сохранения точности копим отдельно числитель и знаменатель,
+ * тогда на примерах (1/3)*3 точность будет сохраняться
+ */
 public class ConversionRate {
     private static final Logger logger = LogManager.getLogger(ConversionRate.class);
 
@@ -26,14 +29,25 @@ public class ConversionRate {
         this.divisor = divisor;
     }
 
+    /**
+     * @return возвращаемый числитель
+     */
     public BigDecimal getNumerator() {
         return numerator;
     }
 
+    /**
+     * @return возвращаемый знаменатель
+     */
     public BigDecimal getDivisor() {
         return divisor;
     }
 
+    /**
+     * Возводит ConversionRate в степень n
+     * @param n степень
+     * @return ConversionRate^n
+     */
     public ConversionRate pow(int n){
         if(n < 0){
             invert();
@@ -45,6 +59,10 @@ public class ConversionRate {
         return this;
     }
 
+    /**
+     * Инвертирует ConversionRate, т.е a -> 1/a
+     * @return инвертированный ConversionRate
+     */
     public ConversionRate invert(){
         var sub = numerator;
         numerator = divisor;
@@ -52,6 +70,11 @@ public class ConversionRate {
         return this;
     }
 
+    /**
+     * Перемножает this * multiplicand
+     * @param multiplicand множитель для перемножения
+     * @return this * multiplicand
+     */
     public ConversionRate multiply(final ConversionRate multiplicand){
         logger.debug("Multiply this " + this + " on " + multiplicand);
         this.numerator = numerator.multiply(multiplicand.numerator);
@@ -67,21 +90,4 @@ public class ConversionRate {
             '}';
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ConversionRate that = (ConversionRate) o;
-        return Objects.equals(numerator, that.numerator) && Objects
-            .equals(divisor, that.divisor);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(numerator, divisor);
-    }
 }
