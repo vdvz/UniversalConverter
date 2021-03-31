@@ -26,7 +26,7 @@ public class UniversalExpressionConverter implements ExpressionConverterI {
     private final int maxScale;
 
     public UniversalExpressionConverter() {
-        maxScale = 15;
+        maxScale = 16;
         roundPolitic = RoundingMode.HALF_DOWN;
     }
 
@@ -69,11 +69,9 @@ public class UniversalExpressionConverter implements ExpressionConverterI {
 
         for (MeasureGroup fromGroup : from.getMeasures()) {
             int index = toMeasureGroups.indexOf(fromGroup);
-            logger.debug(index);
             if(index==-1) continue;
             MeasureGroup toGroup = toMeasureGroups.get(index);
 
-            logger.debug("Итоговый кф преобразования " + conversionRate);
             logger.debug("Преобразовываем величины");
             ConversionRate conversionRateForGroup = convertGroup(fromGroup, toGroup);
 
@@ -101,11 +99,8 @@ public class UniversalExpressionConverter implements ExpressionConverterI {
         т.е node.getUnitName().equals(unit.getName()). Тогда чтобы преобразовать Unit из группы к Unit'у с именем вершины
         мы должны инвертировать полученый коэффициент преобразования*/
         Node fromNode = conversionGraph.getNodeByName(fromUnit.getName());
-        //var k =0;
         while (group.size() > 1){
             logger.debug("Group size " + group.size());
-            //if(k>4) break;
-            //k++;
             Queue<MultiplicationUnit> neighbors = new LinkedList<>();
 
             fromNode.getNeighbors().forEach((node, conversionRate) -> {
@@ -162,10 +157,7 @@ public class UniversalExpressionConverter implements ExpressionConverterI {
 
         ConversionRate conversionRateForGroup = new ConversionRate(BigDecimal.ONE, BigDecimal.ONE);
         MeasureGraph conversionGraph = fromGroup.getGraph();
-        var k =0;
         while (!fromGroup.isEmpty()) {
-            if(k>4) break;
-            k++;
             Queue<MultiplicationUnit> neighbors = new LinkedList<>();
             Unit fromUnit = fromGroup.getNext();
 

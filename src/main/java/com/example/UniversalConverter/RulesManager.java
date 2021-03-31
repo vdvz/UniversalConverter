@@ -44,8 +44,8 @@ public class RulesManager {
 
         Map<String, MeasureGraph> knownNodes = new HashMap<>();
         try (ResourceReaderI reader = new CsvConversionRulesReader(pathToResourceWithRules)) {
+            /*Получаем новые значения*/
             String[] values;
-            /*получаем новые значения*/
             while ((values = reader.getNextValues()) != null) {
                 String sourceNodeName = values[0];
                 String targetNodeName = values[1];
@@ -57,6 +57,8 @@ public class RulesManager {
                     continue;
                 }
 
+                /*Вершина которая называется sourceNodeName - вершина которая будет присоединена
+                 *Вершина которая называется targetNodeName - вершина к которой будет выполнено присоединение*/
                 MeasureGraph existingGraph;
                 if ((existingGraph = knownNodes.get(sourceNodeName)) != null) {
                     MeasureGraph graphToAttach;
@@ -71,12 +73,13 @@ public class RulesManager {
                             }
                         });
                     }else{
+                        /*Создаем вершину с именем targetNodeName и присоединяем
+                        к вершине sourceNodeName в уже существующем графе*/
                         Node nodeToAttach = new Node(targetNodeName);
                         Node attachableNode = existingGraph.getNodeByName(sourceNodeName);
                         existingGraph.bindNode(attachableNode, nodeToAttach, rate);
                         knownNodes.put(targetNodeName, existingGraph);
                     }
-
                 } else if ((existingGraph = knownNodes.get(targetNodeName)) != null) {
                     MeasureGraph attachableGraph;
                     if((attachableGraph = knownNodes.get(sourceNodeName)) != null){

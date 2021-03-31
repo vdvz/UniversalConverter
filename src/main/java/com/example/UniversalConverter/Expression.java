@@ -36,6 +36,13 @@ public class Expression {
     }
 
     /**
+     * @return true если величина безразмерная, false иначе
+     */
+    public boolean isDimensionless(){
+        return measures.isEmpty();
+    }
+
+    /**
      * Преобразовать выражение - найти коэффициент K такой, что K*this = expression,
      * где K - коэффициент преобразования (ConversionRate)
      * @return true если выражение можно преобразовать к выражению expression, false инчае

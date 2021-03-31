@@ -20,10 +20,10 @@ public class MeasureGraph {
     }
 
     /**
-     * Соединяет 2 вершины
+     * Присоединяет вершины fromNode к вершине toNode
      * @param fromNode присоединяемая вершина
      * @param toNode вершина с которой происходит соединение
-     * @param rate вес ребра, коэффициент преобразования
+     * @param rate вес ребра, коэффициент преобразования fromNode к toNode
      */
     public void bindNode(Node fromNode, Node toNode, BigDecimal rate) {
         nodes.add(fromNode);
@@ -47,11 +47,10 @@ public class MeasureGraph {
         toNode.addEdge(fromNode, new ConversionRate(BigDecimal.ONE, rate));
     }
 
-
     /**
-     * Возвращает node с именем nodeName
+     * Ищет и возвращает Node с именем nodeName.
      * @param nodeName имя вершины
-     * @return возвращаемая node
+     * @return возвращаемая node, если такой вершины не существует, то null
      */
     public Node getNodeByName(String nodeName) {
         return nodes.stream().filter(e -> e.getUnitName().equals(nodeName)).findFirst().orElse(null);
