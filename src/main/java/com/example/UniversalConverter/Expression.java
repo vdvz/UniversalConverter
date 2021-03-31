@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class Expression {
 
-    private static final Logger logger = LogManager.getLogger(ServiceRunner.class);
+    private static final Logger logger = LogManager.getLogger(Expression.class);
 
     final private List<MeasureGroup> measures;
 

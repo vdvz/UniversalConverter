@@ -188,7 +188,7 @@ public class RulesTests {
                 new TestRequest(mapper.readValue("{\"from\" : \"мм/км*км*км\", \"to\" : \"1/м*см\"}", ConversionRequest.class), new BigDecimal("0.00000000000001").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"гр\", \"to\" : \"мг\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
                 new TestRequest(mapper.readValue("{\"from\" : \"1/гр\", \"to\" : \"1/мг\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
-                new TestRequest(mapper.readValue("{\"from\" : \"кг/гр\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15))
+                new TestRequest(mapper.readValue("{\"from\" : \"км*км*км/мм*гр\", \"to\" : \"м*см/мг\"}", ConversionRequest.class), new BigDecimal("100000000000").setScale(15))
 
         );
     }
@@ -201,7 +201,9 @@ public class RulesTests {
             new TestRequest(mapper.readValue("{\"from\" : \"км/м\", \"to\" : \"\"}", ConversionRequest.class), new BigDecimal("1000").setScale(15)),
             new TestRequest(mapper.readValue("{\"from\" : \"\", \"to\" : \"км/м\"}", ConversionRequest.class), new BigDecimal("0.001").setScale(15)),
             new TestRequest(mapper.readValue("{\"from\" : \"м**км\", \"to\" : \"мм*мм/\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15)),
-            new TestRequest(mapper.readValue("{\"from\" : \"/мм*мм\", \"to\" : \"1/*м*км*\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15))
+            new TestRequest(mapper.readValue("{\"from\" : \"/мм*мм\", \"to\" : \"1/*м*км*\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15)),
+            new TestRequest(mapper.readValue("{\"from\" : \"/м*км\", \"to\" : \"/мм*мм\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15)),
+            new TestRequest(mapper.readValue("{\"from\" : \"мм*мм/\", \"to\" : \"м*км*/\"}", ConversionRequest.class), new BigDecimal("1000000000").setScale(15))
         );
     }
 
@@ -229,8 +231,8 @@ public class RulesTests {
 
     @DisplayName("simple tests with right answer")
     @ParameterizedTest
-    @MethodSource("sourcesForCorrectTestsWithDimensionless")
-    public void simpleRightTestsWithDimensionless(TestRequest testRequest){
+    @MethodSource("sourcesForCorrectTests")
+    public void simpleRightTests(TestRequest testRequest){
         ConversionRequest request = testRequest.request;
         BigDecimal answer = testRequest.answer;
 
@@ -245,8 +247,8 @@ public class RulesTests {
 
     @DisplayName("simple tests with dimensionless measure")
     @ParameterizedTest
-    @MethodSource("sourcesForCorrectTests")
-    public void simpleRightTests(TestRequest testRequest){
+    @MethodSource("sourcesForCorrectTestsWithDimensionless")
+    public void simpleRightTestsWithDimensionless(TestRequest testRequest){
         ConversionRequest request = testRequest.request;
         BigDecimal answer = testRequest.answer;
 
@@ -275,7 +277,7 @@ public class RulesTests {
 
     @Test
     public void dd(){
-        var dec = new BigDecimal("10000.00000000000000000000000000111000000").stripTrailingZeros();
+        var dec = new BigDecimal("00010000.00000000000000000000000000111000000").stripTrailingZeros();
         if(dec.toString().length() > 15){
             System.out.println(dec.toString().substring(0, 15));
         } else {

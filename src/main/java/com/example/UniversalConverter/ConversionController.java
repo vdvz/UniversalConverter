@@ -31,7 +31,7 @@ public class ConversionController {
 
         conversionHandler.handleRequest(request);
 
-        return new ResponseEntity<>(, HttpStatus.OK);
+        return new ResponseEntity<>("answer", HttpStatus.OK);
     }
 
     /**
